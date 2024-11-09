@@ -1,6 +1,6 @@
 package com.springboot.printmastercrm.repository;
 
-import com.springboot.postmastercrm.entity.Printing;
+import com.springboot.printmastercrm.entity.Printing;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
