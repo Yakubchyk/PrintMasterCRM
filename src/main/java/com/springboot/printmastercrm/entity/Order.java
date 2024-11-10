@@ -2,17 +2,15 @@ package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
 
 @Entity
-@Table(name = "orders")
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class Order {
 
     @Id
@@ -20,23 +18,22 @@ public class Order {
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdOrderDate;
+    @ManyToOne
+    @JoinColumn(name = "manager_id", nullable = false)
+    private User manager;
 
-    @NonNull
-    private BigDecimal totalPrice;
+    @Column(nullable = false)
+    private String product;
 
-    // Связь с сущностью Stamping
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Stamping> stampings;
+    @Embedded
+    private ServiceDetails printDetails;
 
-    // Связь с сущностью Printing
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Printing> printings;
+    @Embedded
+    private ServiceDetails postPressDetails;
 
+    @Column(nullable = false)
+    private BigDecimal totalCost;
 }
-
-
-

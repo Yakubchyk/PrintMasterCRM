@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head th:insert="_bootstrap::link">
+  <meta charset="UTF-8">
+  <title>Home</title>
+</head>
+<body>
+<header th:insert="_header.html"></header>
+
+
+<div class="container mt-5">
+  <h2 th:text="${#strings.isEmpty(order.id) ? 'New Order' : 'Edit Order'}"></h2>
+  <form th:action="@{/orders/save}" th:object="${order}" method="post">
+    <div class="form-group">
+      <label for="product">Product</label>
+      <input type="text" class="form-control" id="product" name="product" th:value="${order.product}" required>
+    </div>
+    <div class="form-group">
+      <label for="printType">Print Type</label>
+      <input type="text" class="form-control" id="printType" name="printDetails.type" th:value="${order.printDetails.type}">
+    </div>
+    <div class="form-group">
+      <label for="printCost">Print Cost</label>
+      <input type="number" step="0.01" class="form-control" id="printCost" name="printDetails.cost" th:value="${order.printDetails.cost}">
+    </div>
+    <div class="form-group">
+      <label for="postPressType">Post-Press Type</label>
+      <input type="text" class="form-control" id="postPressType" name="postPressDetails.type" th:value="${order.postPressDetails.type}">
+    </div>
+    <div class="form-group">
+      <label for="postPressCost">Post-Press Cost</label>
+      <input type="number" step="0.01" class="form-control" id="postPressCost" name="postPressDetails.cost" th:value="${order.postPressDetails.cost}">
+    </div>
+    <div class="form-group">
+      <label for="totalCost">Total Cost</label>
+      <input type="number" step="0.01" class="form-control" id="totalCost" name="totalCost" th:value="${order.totalCost}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a th:href="@{/orders}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+
+
+<th:block th:insert="_bootstrap::script"></th:block>
+</body>
+</html>

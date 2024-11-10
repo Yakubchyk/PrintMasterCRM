@@ -2,9 +2,6 @@ package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.antlr.v4.runtime.misc.NotNull;
-
-import java.util.List;
 
 @Entity
 @Getter
@@ -12,28 +9,26 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Table(name = "manager")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    private String name;
-
-    @NotNull
-    private String email;
-
-    @NotNull
+    @Column(unique = true, nullable = false)
     private String username;
 
-    @NotNull
+    @Column(nullable = false)
     private String password;
 
-    @OneToMany(mappedBy = "manager")
-    private List<Client> clients;
+    @Column(unique = true, nullable = false)
+    private String email;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    public enum Role {
+        ADMIN, MANAGER, USER
+    }
 }
-
-
