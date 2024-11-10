@@ -31,22 +31,11 @@ public class OrderController {
         return orderService.createOrder(order, user);
     }
 
-    @GetMapping("/{id}")
-    public Order getOrderById(@PathVariable Long id, Authentication auth) {
-        User user = (User) auth.getPrincipal();
-        return orderService.getOrderById(id, user);
-    }
-
-    @PutMapping("/{id}")
-    public Order updateOrder(@PathVariable Long id, @RequestBody Order order, Authentication auth) {
-        User user = (User) auth.getPrincipal();
-        return orderService.updateOrder(id, order, user);
-    }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
     public void deleteOrder(@PathVariable Long id, Authentication auth) {
-        User user = (User) auth.getPrincipal();
-        orderService.deleteOrder(id, user);
+        Order order = (Order) auth.getPrincipal();
+        orderService.deleteOrder(order);
     }
 }

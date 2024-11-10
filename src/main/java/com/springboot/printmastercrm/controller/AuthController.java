@@ -42,6 +42,7 @@ public class AuthController {
         if (authentication != null) {
             authentication.setAuthenticated(false);
         }
+
         return "redirect:/login";
     }
 }

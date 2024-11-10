@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "stamping")
-public class Stamping {
+public class PostPress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

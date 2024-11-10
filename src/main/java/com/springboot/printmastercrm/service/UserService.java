@@ -3,20 +3,33 @@ package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.User;
 import com.springboot.printmastercrm.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-public class UserService {
+@Transactional
+public class UserService implements UserDetailsService {
+
+
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    private UserRepository userRepository;
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
 
     public void registerUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -40,7 +53,7 @@ public class UserService {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setRole(updatedUser.getRole());
+        existingUser.setRoles(updatedUser.getRoles());
         return userRepository.save(existingUser);
     }
 
@@ -51,5 +64,15 @@ public class UserService {
     public String getStatistics() {
         long userCount = userRepository.count();
         return "Total users: " + userCount;
+    }
+
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> byUsername = userRepository.findByUsername(username);
+        if (byUsername.isPresent()) {
+            return byUsername.get();
+        }
+        throw new UsernameNotFoundException(username);
     }
 }

@@ -28,11 +28,9 @@ public class Order {
     @Column(nullable = false)
     private String product;
 
-    @Embedded
-    private ServiceDetails printDetails;
+    @Column(nullable = false)
+    private BigDecimal postpressPrice;
 
-    @Embedded
-    private ServiceDetails postPressDetails;
 
     @Column(nullable = false)
     private BigDecimal totalCost;

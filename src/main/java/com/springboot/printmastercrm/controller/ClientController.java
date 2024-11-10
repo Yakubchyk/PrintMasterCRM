@@ -38,7 +38,7 @@ public class ClientController {
 
     @DeleteMapping("/{id}")
     public void deleteClient(@PathVariable Long id, Authentication auth) {
-        User user = (User) auth.getPrincipal();
-        clientService.deleteClient(id, user);
+        Client client  = (Client) auth.getPrincipal();
+        clientService.deleteClient(id, client);
     }
 }
