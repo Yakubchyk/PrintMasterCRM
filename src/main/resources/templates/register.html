@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head th:insert="_bootstrap::link">
     <meta charset="UTF-8">
@@ -8,33 +9,38 @@
 <body>
 <header th:insert="_header.html"></header>
 
-<div class="container mt-5">
-    <h2>Register</h2>
-    <form th:action="@{/register}" method="post">
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+<div class="container">
+    <div class="row align-items-start">
+        <div class="col">
+            One of three columns
         </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+        <div class="col">
+
+            <!--/*@thymesVar id="account" type="com.springboot.printmastercrm.entity.Account"*/-->
+            <form th:action="@{/register}" th:object="${account}" method="post">
+                <div class="mb-3">
+                    <label for="exampleInputName1" class="form-label">Имя пользователя</label>
+                    <input type="text" class="form-control" id="exampleInputName1" th:field="*{name}"
+                           placeholder="Name">
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputUsername1" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{username}"
+                           placeholder="Username">
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputPassword1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="exampleInputPassword1" th:field="*{password}"
+                           placeholder="Password">
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
+        <div class="col">
+            One of three columns
         </div>
-        <div class="form-group">
-            <label for="role">Role</label>
-            <select class="form-control" id="role" name="role" required>
-                <option value="USER">User</option>
-                <option value="MANAGER">Manager</option>
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Register</button>
-        <a th:href="@{/login}" class="btn btn-link">Login</a>
-    </form>
+    </div>
 </div>
 
-<th:block th:insert="_bootstrap::script"></th:block>
 </body>
 </html>

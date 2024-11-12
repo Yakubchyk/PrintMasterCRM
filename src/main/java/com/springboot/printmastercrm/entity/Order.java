@@ -18,12 +18,12 @@ public class Order {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "client_id", nullable = false)
-    private Client client;
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "manager_id", nullable = false)
-    private User manager;
+    private Account account;
 
     @Column(nullable = false)
     private String product;
