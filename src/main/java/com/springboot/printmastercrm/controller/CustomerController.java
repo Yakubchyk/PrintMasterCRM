@@ -29,7 +29,6 @@ public class CustomerController {
         return "profile";
     }
 
-    // Обработка отправки формы регистрации нового клиента
     @PostMapping("/register")
     public String register(@ModelAttribute("customer") Customer customer, Authentication authentication) {
         String managerUsername = authentication.getName();

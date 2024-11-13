@@ -38,16 +38,6 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-//    @Bean
-//    public InMemoryUserDetailsManager userDetailsService() {
-//        UserDetails user = User.withDefaultPasswordEncoder()
-//                .username("admin")
-//                .password("admin")
-//                .roles("USER")
-//                .build();
-//        return new InMemoryUserDetailsManager(user);
-//    }
-
     @Bean
     public AuthenticationProvider userDetailsService() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
@@ -55,9 +45,4 @@ public class SecurityConfiguration {
         authenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder(11));
         return authenticationProvider;
     }
-
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
 }

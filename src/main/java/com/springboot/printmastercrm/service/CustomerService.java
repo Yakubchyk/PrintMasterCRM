@@ -2,20 +2,17 @@ package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.Account;
 import com.springboot.printmastercrm.entity.Customer;
+import com.springboot.printmastercrm.repository.AccountRepository;
 import com.springboot.printmastercrm.repository.CustomerRepository;
-import jakarta.servlet.SessionTrackingMode;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @Transactional
@@ -23,18 +20,20 @@ public class CustomerService implements UserDetailsService {
 
     @Autowired
     private CustomerRepository customerRepository;
+    @Autowired
+    private AccountRepository accountRepository;
 
-    // Получение списка клиентов, созданных конкретным менеджером
     public List<Customer> getCustomersByManager(String managerUsername) {
         return customerRepository.findByManagerUsername(managerUsername);
     }
 
-    // Создание клиента и привязка к менеджеру
     public Customer createCustomerForManager(Customer customer, String managerUsername) {
         customer.setManagerUsername(managerUsername);
+        Account managerAccount = accountRepository.findByUsername(managerUsername)
+                .orElseThrow(() -> new RuntimeException("Manager account not found"));
+        customer.setAccount(managerAccount);
         return customerRepository.save(customer);
     }
-
 
     public Customer existByUsername(String username) {
         Optional<Customer> customer = customerRepository.findByUsername(username);
@@ -43,7 +42,6 @@ public class CustomerService implements UserDetailsService {
         }
         return null;
     }
-
 
     public Customer createCustomer(Customer customer) {
         return customerRepository.save(customer);

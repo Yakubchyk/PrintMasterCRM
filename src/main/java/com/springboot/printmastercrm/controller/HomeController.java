@@ -12,16 +12,6 @@ public class HomeController {
 
     @GetMapping
     public String home(@AuthenticationPrincipal Account account) {
-        System.out.println(account);
-
-
-
-//        SecurityContext context = SecurityContextHolder.getContext();
-//        Authentication authentication = context.getAuthentication();
-//        System.out.println(authentication.getPrincipal());
-//        System.out.println(authentication.getAuthorities());
-//        System.out.println(authentication.getDetails());
-//        System.out.println(authentication.getCredentials());
         return "home";
     }
 }

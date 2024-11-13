@@ -14,8 +14,12 @@
     <!--/*@thymesVar id="customer" type="com.springboot.printmastercrm.entity.Customer"*/-->
     <form th:action="@{/profile/register}" th:object="${customer}" method="post">
         <div>
-            <label>Имя:</label>
+            <label>Название организации:</label>
             <input type="text" th:field="*{username}" required/>
+        </div>
+        <div>
+            <label>Телефон:</label>
+            <input type="text" th:field="*{phoneNumber}" required/>
         </div>
         <div>
             <label>Email:</label>
@@ -34,8 +38,9 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="customers : ${customer}">
+        <tr th:each="customer : ${customers}">
             <td th:text="${customer.username}">Имя клиента</td>
+            <td th:text="${customer.phoneNumber}">Телефон</td>
             <td th:text="${customer.email}">Email клиента</td>
         </tr>
         </tbody>
