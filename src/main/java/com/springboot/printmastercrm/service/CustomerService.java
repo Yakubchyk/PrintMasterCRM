@@ -50,7 +50,6 @@ public class CustomerService implements UserDetailsService {
     public Customer updateCustomer(Long id, Customer updatedCustomer) {
         Customer existingCustomer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
-        existingCustomer.setRole(updatedCustomer.getRole());
         existingCustomer.setAccount(updatedCustomer.getAccount());
         return customerRepository.save(existingCustomer);
     }
