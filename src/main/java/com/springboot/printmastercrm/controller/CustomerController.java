@@ -35,6 +35,4 @@ public class CustomerController {
         customerService.createCustomerForManager(customer, managerUsername);
         return "redirect:/profile";
     }
-
-
 }

@@ -10,36 +10,41 @@
 <div class="container">
 
 
-    <div class="container text-center">
+    <div class="container">
         <div class="row align-items-start">
             <div class="col">
-                <h4>Рабочий кабинет</h4>
+                <h6>Новый клиент</h6>
 
                 <!--/*@thymesVar id="customer" type="com.springboot.printmastercrm.entity.Customer"*/-->
                 <form th:action="@{/profile/register}" th:object="${customer}" method="post">
-                    <div>
-                        <label>Название организации:</label>
-                        <input type="text" th:field="*{username}" required/>
+                    <div class="mb-3">
+                        <label for="exampleInputName1" class="form-label">Название организации</label>
+                        <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}"
+                               placeholder="Название">
                     </div>
-                    <div>
-                        <label>Телефон:</label>
-                        <input type="text" th:field="*{phoneNumber}" required/>
+                    <div class="mb-3">
+                        <label for="exampleInputUsername1" class="form-label">Телефон</label>
+                        <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}"
+                               placeholder="Телефон">
                     </div>
-                    <div>
-                        <label>Email:</label>
-                        <input type="email" th:field="*{email}" required/>
+                    <div class="mb-3">
+                        <label for="exampleInputPassword1" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}"
+                               placeholder="e-mail">
                     </div>
-                    <button type="submit">Зарегистрировать клиента</button>
+                    <button type="submit" class="btn btn-primary">Новый заказчик</button>
                 </form>
+
 
             </div>
             <div class="col">
 
-                <h4>Список клиентов</h4>
+                <h6>Список клиентов</h6>
                 <table>
                     <thead>
                     <tr>
-                        <th>Имя</th>
+                        <th>Фирма</th>
+                        <th>Телефон</th>
                         <th>Email</th>
                     </tr>
                     </thead>
