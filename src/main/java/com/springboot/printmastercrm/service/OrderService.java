@@ -2,7 +2,6 @@ package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.Account;
 import com.springboot.printmastercrm.entity.Order;
-import com.springboot.printmastercrm.repository.CustomerRepository;
 import com.springboot.printmastercrm.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +15,6 @@ public class OrderService {
 
     @Autowired
     private OrderRepository orderRepository;
-
-    @Autowired
-    private CustomerRepository customerRepository;
 
     public List<Order> getOrdersByAccount(Account account) {
             return orderRepository.findOrderById(account.getId());

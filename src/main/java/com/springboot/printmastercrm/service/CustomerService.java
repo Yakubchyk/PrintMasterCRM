@@ -1,9 +1,12 @@
 package com.springboot.printmastercrm.service;
 
+import com.springboot.printmastercrm.entity.Account;
 import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.repository.CustomerRepository;
+import jakarta.servlet.SessionTrackingMode;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,35 +15,37 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional
 public class CustomerService implements UserDetailsService {
 
-    private final CustomerRepository customerRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
-
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, BCryptPasswordEncoder passwordEncoder) {
-        this.customerRepository = customerRepository;
-        this.passwordEncoder = passwordEncoder;
+    private CustomerRepository customerRepository;
+
+    // Получение списка клиентов, созданных конкретным менеджером
+    public List<Customer> getCustomersByManager(String managerUsername) {
+        return customerRepository.findByManagerUsername(managerUsername);
     }
 
-    public void registerCustomer(Customer customer) {
-        customer.setPassword(passwordEncoder.encode(customer.getPassword()));
-        customerRepository.save(customer);
+    // Создание клиента и привязка к менеджеру
+    public Customer createCustomerForManager(Customer customer, String managerUsername) {
+        customer.setManagerUsername(managerUsername);
+        return customerRepository.save(customer);
     }
 
-    public boolean isCustomerExist(String username) {
-        return customerRepository.existsByUsername(username);
+
+    public Customer existByUsername(String username) {
+        Optional<Customer> customer = customerRepository.findByUsername(username);
+        if (customer.isPresent()) {
+            return customer.get();
+        }
+        return null;
     }
 
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
-    }
 
     public Customer createCustomer(Customer customer) {
-        customer.setPassword(passwordEncoder.encode(customer.getPassword()));
         return customerRepository.save(customer);
     }
 
@@ -54,11 +59,6 @@ public class CustomerService implements UserDetailsService {
 
     public void deleteCustomer(Long id) {
         customerRepository.deleteById(id);
-    }
-
-    public String getStatistics() {
-        long customerCount = customerRepository.count();
-        return "Total customers: " + customerCount;
     }
 
     @Override

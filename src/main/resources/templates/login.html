@@ -14,19 +14,16 @@
         <div class="col">
 
 
-
-
         </div>
         <div class="col">
-            <!--/*@thymesVar id="account" type="com.springboot.printmastercrm.entity.Account"*/-->
-            <form th:action="@{/login}" th:object="${account}" method="post">
+            <form th:action="@{/account/login}" method="post">
                 <div class="mb-3">
                     <label for="exampleInputUsername1" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{username}" placeholder="Username">
+                    <input type="text" class="form-control" id="exampleInputUsername1" name="username" placeholder="Username">
                 </div>
                 <div class="mb-3">
                     <label for="exampleInputPassword1" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="exampleInputPassword1" th:field="*{password}" placeholder="Password">
+                    <input type="password" class="form-control" id="exampleInputPassword1" name="password" placeholder="Password">
                 </div>
                 <button type="submit" class="btn btn-primary">Вход</button>
             </form>

@@ -1,7 +1,6 @@
 package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -16,20 +15,15 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    private String name;
-
-    @NotBlank
     private String username;
-
-    @NotBlank
-    private String password;
 
     @Column(unique = true, nullable = false)
     private String email;
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    private String managerUsername;
 
     public enum Role {
         ROLE_CUSTOMER

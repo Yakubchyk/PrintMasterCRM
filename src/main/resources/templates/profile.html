@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:insert="_bootstrap::link">
     <meta charset="UTF-8">
     <title>Рабочий Кабинет</title>
@@ -9,6 +7,40 @@
 <body>
 <header th:insert="_header.html"></header>
 
+<div class="container">
+    <h2>Рабочий кабинет</h2>
+
+    <!-- Форма регистрации клиента -->
+    <!--/*@thymesVar id="customer" type="com.springboot.printmastercrm.entity.Customer"*/-->
+    <form th:action="@{/profile/register}" th:object="${customer}" method="post">
+        <div>
+            <label>Имя:</label>
+            <input type="text" th:field="*{username}" required/>
+        </div>
+        <div>
+            <label>Email:</label>
+            <input type="email" th:field="*{email}" required/>
+        </div>
+        <button type="submit">Зарегистрировать клиента</button>
+    </form>
+
+    <!-- Таблица со списком клиентов -->
+    <h3>Список клиентов</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Имя</th>
+            <th>Email</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="customers : ${customer}">
+            <td th:text="${customer.username}">Имя клиента</td>
+            <td th:text="${customer.email}">Email клиента</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 
 
 <th:block th:insert="_bootstrap::script"></th:block>

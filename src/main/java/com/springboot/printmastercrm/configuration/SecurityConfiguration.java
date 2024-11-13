@@ -1,49 +1,63 @@
 package com.springboot.printmastercrm.configuration;
 
-import com.springboot.printmastercrm.service.AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
 
+    @Autowired
+    private UserDetailsService accountService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeRequests(authorize -> authorize
-                        .requestMatchers("/", "/register", "/login").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/profile/**").hasAnyRole("MANAGER", "ADMIN")
+                .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/","/home","/account/register").permitAll()
+                        .requestMatchers("/profile").hasAnyRole("MANAGER")
+                        .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/login").permitAll()
-                        .defaultSuccessUrl("/", true)
+                .httpBasic(withDefaults())
+                .formLogin(httpSecurityFormLoginConfigurer -> httpSecurityFormLoginConfigurer
+                        .loginPage("/account/login").permitAll()
                 )
-                .logout(logout -> logout
-                        .logoutUrl("/logout").permitAll()
-                        .logoutSuccessUrl("/login")
-                );
+                .logout(httpSecurityLogoutConfigurer -> httpSecurityLogoutConfigurer
+                        .logoutUrl("/account/logout").permitAll());
         return http.build();
     }
 
+//    @Bean
+//    public InMemoryUserDetailsManager userDetailsService() {
+//        UserDetails user = User.withDefaultPasswordEncoder()
+//                .username("admin")
+//                .password("admin")
+//                .roles("USER")
+//                .build();
+//        return new InMemoryUserDetailsManager(user);
+//    }
+
     @Bean
-    public AuthenticationProvider authenticationProvider(AccountService accountService) {
+    public AuthenticationProvider userDetailsService() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(accountService);
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        authenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder(11));
         return authenticationProvider;
     }
 
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
 }

@@ -1,7 +1,6 @@
 package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,15 +21,12 @@ public class Account implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     @Column(unique = true, nullable = false)
     private String name;
 
-    @NotBlank
     @Column(unique = true, nullable = false)
     private String username;
 
-    @NotBlank
     @Column(nullable = false)
     private String password;
 

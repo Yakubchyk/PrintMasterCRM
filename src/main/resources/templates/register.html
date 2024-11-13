@@ -16,8 +16,9 @@
         </div>
         <div class="col">
 
+
             <!--/*@thymesVar id="account" type="com.springboot.printmastercrm.entity.Account"*/-->
-            <form th:action="@{/register}" th:object="${account}" method="post">
+            <form th:action="@{/account/register}" th:object="${account}" method="post">
                 <div class="mb-3">
                     <label for="exampleInputName1" class="form-label">Имя пользователя</label>
                     <input type="text" class="form-control" id="exampleInputName1" th:field="*{name}"
@@ -33,7 +34,7 @@
                     <input type="password" class="form-control" id="exampleInputPassword1" th:field="*{password}"
                            placeholder="Password">
                 </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
             </form>
         </div>
         <div class="col">
