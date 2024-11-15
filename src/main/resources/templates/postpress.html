@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Калькулятор расчета стоимости</title>
+</head>
+<body>
+<div class="container text-center">
+    <h3>Калькулятор расчета стоимости</h3>
+    <form th:action="@{/profile/postpress}" th:object="${postpress}" method="post">
+        <input type="hidden" name="customerId" th:value="${customer.id}">
+
+            <div class="col-md-4 mb-3">
+                <label>Стоимость оттиска</label>
+                <input type="text" class="form-control" th:field="*{oneOttiskPrice}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Стоимость приладки</label>
+                <input type="text" class="form-control" th:field="*{montageWorkPrice}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Стоимость фольги М2.</label>
+                <input type="text" class="form-control" th:field="*{oneQuadratMetterFoilPrice}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Ширина в СМ.</label>
+                <input type="text" class="form-control" th:field="*{widthSM}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Длинна в СМ.</label>
+                <input type="text" class="form-control" th:field="*{lengthSM}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Тираж ШТ.</label>
+                <input type="text" class="form-control" th:field="*{quantity}">
+            </div>
+
+            <div class="alert alert-info mt-3" role="alert">
+                <h5>Итого: <span th:text="${result}"></span> руб.</h5>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Сохранить расчет</button>
+        </form>
+
+</div>
+
+</body>
+</html>

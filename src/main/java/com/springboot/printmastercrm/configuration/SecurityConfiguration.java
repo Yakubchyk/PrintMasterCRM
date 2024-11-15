@@ -25,7 +25,7 @@ public class SecurityConfiguration {
         http
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/","/home","/account/register").permitAll()
-                        .requestMatchers("/profile").hasAnyRole("MANAGER")
+                        .requestMatchers("/profile/**").hasAnyRole("MANAGER")
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

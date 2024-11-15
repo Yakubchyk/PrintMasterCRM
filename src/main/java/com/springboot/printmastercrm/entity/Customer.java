@@ -21,10 +21,10 @@ public class Customer {
     private String phoneNumber;
     @Column(unique = true, nullable = false)
     private String email;
-
+    @Column(unique = true, nullable = false)
     private String managerUsername;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 }
