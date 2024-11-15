@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:insert="_bootstrap::link">
     <meta charset="UTF-8">
     <title>Рабочий Кабинет</title>
@@ -10,37 +11,41 @@
 <div class="container">
     <div class="row align-items-start">
 
-        <div class="col">
+        <div class="col-3">
             <h6>Новый клиент</h6>
             <form th:action="@{/profile/register}" th:object="${customer}" method="post">
                 <div class="mb-3">
                     <label for="exampleInputName1" class="form-label">Название организации</label>
-                    <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}" placeholder="Название">
+                    <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}"
+                           placeholder="Название">
                 </div>
                 <div class="mb-3">
                     <label for="exampleInputUsername1" class="form-label">Телефон</label>
-                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}" placeholder="Телефон">
+                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}"
+                           placeholder="Телефон">
                 </div>
                 <div class="mb-3">
                     <label for="exampleInputPassword1" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}" placeholder="e-mail">
+                    <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}"
+                           placeholder="e-mail">
                 </div>
                 <button type="submit" class="btn btn-primary">Новый заказчик</button>
             </form>
         </div>
 
-        <div class="col">
+        <div class="col-6">
             <h6>Список клиентов</h6>
             <table class="table">
-                <thead>
-                <tr>
-                    <th>Фирма</th>
-                    <th>Телефон</th>
-                    <th>Email</th>
-                </tr>
-                </thead>
+
                 <tbody>
                 <tr th:each="customer : ${customers}">
+                    <td>
+                        <form th:action="@{/profile}" method="get">
+
+
+
+                        </form>
+                    </td>
                     <td>
                         <a th:href="@{/profile?id={id}(id=${customer.id})}" th:text="${customer.username}"></a>
                     </td>
@@ -51,14 +56,15 @@
             </table>
         </div>
 
-        <div class="col">
+        <div class="col-3">
             <h6>Карточка клиента</h6>
             <div th:if="${selectedCustomer != null}">
                 <form th:action="@{/profile/update}" th:object="${selectedCustomer}" method="post">
                     <input type="hidden" th:field="*{id}">
                     <div class="mb-3">
                         <label class="form-label">Название организации</label>
-                        <input type="text" class="form-control" th:field="*{username}" placeholder="Название организации">
+                        <input type="text" class="form-control" th:field="*{username}"
+                               placeholder="Название организации">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Телефон</label>
@@ -71,6 +77,11 @@
                     <input type="hidden" th:field="*{managerUsername}">
                     <input type="hidden" th:field="*{account.id}">
                     <button type="submit" class="btn btn-success">Сохранить изменения</button>
+                </form>
+                <!-- Кнопка удаления -->
+                <form th:action="@{/profile/delete}" method="post" class="mt-3">
+                    <input type="hidden" name="id" th:value="${selectedCustomer.id}">
+                    <button type="submit" class="btn btn-danger">Удалить клиента</button>
                 </form>
             </div>
             <div th:if="${selectedCustomer == null}">

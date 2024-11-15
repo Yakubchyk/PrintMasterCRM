@@ -44,4 +44,11 @@ public class CustomerController {
         customerService.updateCustomer(updatedCustomer.getId(), updatedCustomer);
         return "redirect:/profile?id=" + updatedCustomer.getId();
     }
+
+    @PostMapping("/delete")
+    public String deleteCustomer(@RequestParam("id") Long id) {
+        customerService.deleteCustomer(id);
+        return "redirect:/profile";
+    }
+
 }
