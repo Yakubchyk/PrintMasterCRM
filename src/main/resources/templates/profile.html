@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>Рабочий Кабинет</title>
 </head>
-<body>
+
 <header th:insert="_header.html"></header>
 
 <div class="container">
@@ -55,8 +55,8 @@
         </div>
 
         <div class="col">
-            <h6>Карточка клиента</h6>
 
+            <!--/*@thymesVar id="selectedCustomer" type="com.springboot.printmastercrm.entity.Customer"*/-->
             <div th:if="${selectedCustomer != null}">
                 <form th:action="@{/profile/update}" th:object="${selectedCustomer}" method="post">
                     <input type="hidden" th:field="*{id}">
@@ -82,11 +82,10 @@
 
 
             </div>
+            <!--/*@thymesVar id="selectedCustomer" type="com.springboot.printmastercrm.entity.Customer"*/-->
             <div th:if="${selectedCustomer == null}">
-                <p>Выберите клиента, чтобы увидеть подробности.</p>
+                <p>Карточка клиента</p>
 
-                <p><strong>Итоговая стоимость тиснения:</strong> <span
-                        th:text="${selectedCustomer.postPress.totalPrice}"></span> руб.</p>
             </div>
         </div>
     </div>
@@ -94,5 +93,5 @@
 
 
 <th:block th:insert="_bootstrap::script"></th:block>
-</body>
+
 </html>
