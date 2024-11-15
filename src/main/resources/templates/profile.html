@@ -1,32 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:insert="_bootstrap::link">
     <meta charset="UTF-8">
     <title>Рабочий Кабинет</title>
 </head>
-
+<body>
 <header th:insert="_header.html"></header>
 
 <div class="container">
     <div class="row align-items-start">
+
         <div class="col">
             <h6>Новый клиент</h6>
             <form th:action="@{/profile/register}" th:object="${customer}" method="post">
                 <div class="mb-3">
                     <label for="exampleInputName1" class="form-label">Название организации</label>
-                    <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}"
-                           placeholder="Название">
+                    <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}" placeholder="Название">
                 </div>
                 <div class="mb-3">
                     <label for="exampleInputUsername1" class="form-label">Телефон</label>
-                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}"
-                           placeholder="Телефон">
+                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}" placeholder="Телефон">
                 </div>
                 <div class="mb-3">
                     <label for="exampleInputPassword1" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}"
-                           placeholder="e-mail">
+                    <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}" placeholder="e-mail">
                 </div>
                 <button type="submit" class="btn btn-primary">Новый заказчик</button>
             </form>
@@ -55,15 +52,13 @@
         </div>
 
         <div class="col">
-
-            <!--/*@thymesVar id="selectedCustomer" type="com.springboot.printmastercrm.entity.Customer"*/-->
+            <h6>Карточка клиента</h6>
             <div th:if="${selectedCustomer != null}">
                 <form th:action="@{/profile/update}" th:object="${selectedCustomer}" method="post">
                     <input type="hidden" th:field="*{id}">
                     <div class="mb-3">
                         <label class="form-label">Название организации</label>
-                        <input type="text" class="form-control" th:field="*{username}"
-                               placeholder="Название организации">
+                        <input type="text" class="form-control" th:field="*{username}" placeholder="Название организации">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Телефон</label>
@@ -73,25 +68,18 @@
                         <label class="form-label">Email</label>
                         <input type="email" class="form-control" th:field="*{email}" placeholder="Email">
                     </div>
-
                     <input type="hidden" th:field="*{managerUsername}">
                     <input type="hidden" th:field="*{account.id}">
-
                     <button type="submit" class="btn btn-success">Сохранить изменения</button>
                 </form>
-
-
             </div>
-            <!--/*@thymesVar id="selectedCustomer" type="com.springboot.printmastercrm.entity.Customer"*/-->
             <div th:if="${selectedCustomer == null}">
-                <p>Карточка клиента</p>
 
             </div>
         </div>
     </div>
 </div>
 
-
 <th:block th:insert="_bootstrap::script"></th:block>
-
+</body>
 </html>

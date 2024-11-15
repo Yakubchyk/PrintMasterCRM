@@ -19,7 +19,7 @@ CREATE TABLE customer
     username         VARCHAR(255)                            NOT NULL,
     phone_number     VARCHAR(255)                            NOT NULL,
     email            VARCHAR(255)                            NOT NULL,
-    manager_username VARCHAR(255)                            NOT NULL,
+    manager_username VARCHAR(255),
     account_id       BIGINT                                  NOT NULL,
     CONSTRAINT pk_customer PRIMARY KEY (id)
 );
@@ -66,9 +66,6 @@ ALTER TABLE accounts
 
 ALTER TABLE customer
     ADD CONSTRAINT uc_customer_email UNIQUE (email);
-
-ALTER TABLE customer
-    ADD CONSTRAINT uc_customer_managerusername UNIQUE (manager_username);
 
 ALTER TABLE customer
     ADD CONSTRAINT uc_customer_phonenumber UNIQUE (phone_number);
