@@ -35,6 +35,24 @@ public class CustomerService implements UserDetailsService {
         return customerRepository.save(customer);
     }
 
+    public Customer findById(Long id) {
+        return customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer not found"));
+    }
+
+    public Customer updateCustomer(Long id, Customer updatedCustomer) {
+        Customer existingCustomer = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        existingCustomer.setAccount(updatedCustomer.getAccount());
+        existingCustomer.setId(updatedCustomer.getId());
+
+        return customerRepository.save(updatedCustomer);
+    }
+
+    public void deleteCustomer(Long id) {
+        customerRepository.deleteById(id);
+    }
+
     public Customer existByUsername(String username) {
         Optional<Customer> customer = customerRepository.findByUsername(username);
         if (customer.isPresent()) {
@@ -47,16 +65,6 @@ public class CustomerService implements UserDetailsService {
         return customerRepository.save(customer);
     }
 
-    public Customer updateCustomer(Long id, Customer updatedCustomer) {
-        Customer existingCustomer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
-        existingCustomer.setAccount(updatedCustomer.getAccount());
-        return customerRepository.save(existingCustomer);
-    }
-
-    public void deleteCustomer(Long id) {
-        customerRepository.deleteById(id);
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

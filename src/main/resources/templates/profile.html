@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:insert="_bootstrap::link">
     <meta charset="UTF-8">
     <title>Рабочий Кабинет</title>
@@ -8,67 +9,87 @@
 <header th:insert="_header.html"></header>
 
 <div class="container">
+    <div class="row align-items-start">
+        <div class="col">
+            <h6>Новый клиент</h6>
+            <form th:action="@{/profile/register}" th:object="${customer}" method="post">
+                <div class="mb-3">
+                    <label for="exampleInputName1" class="form-label">Название организации</label>
+                    <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}"
+                           placeholder="Название">
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputUsername1" class="form-label">Телефон</label>
+                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}"
+                           placeholder="Телефон">
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputPassword1" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}"
+                           placeholder="e-mail">
+                </div>
+                <button type="submit" class="btn btn-primary">Новый заказчик</button>
+            </form>
+        </div>
 
+        <div class="col">
+            <h6>Список клиентов</h6>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Фирма</th>
+                    <th>Телефон</th>
+                    <th>Email</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="customer : ${customers}">
+                    <td>
+                        <a th:href="@{/profile?id={id}(id=${customer.id})}" th:text="${customer.username}"></a>
+                    </td>
+                    <td th:text="${customer.phoneNumber}">Телефон</td>
+                    <td th:text="${customer.email}">Email клиента</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
-    <div class="container">
-        <div class="row align-items-start">
-            <div class="col">
-                <h6>Новый клиент</h6>
+        <div class="col">
+            <h6>Карточка клиента</h6>
 
-                <!--/*@thymesVar id="customer" type="com.springboot.printmastercrm.entity.Customer"*/-->
-                <form th:action="@{/profile/register}" th:object="${customer}" method="post">
+            <div th:if="${selectedCustomer != null}">
+                <form th:action="@{/profile/update}" th:object="${selectedCustomer}" method="post">
+                    <input type="hidden" th:field="*{id}">
                     <div class="mb-3">
-                        <label for="exampleInputName1" class="form-label">Название организации</label>
-                        <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}"
-                               placeholder="Название">
+                        <label class="form-label">Название организации</label>
+                        <input type="text" class="form-control" th:field="*{username}"
+                               placeholder="Название организации">
                     </div>
                     <div class="mb-3">
-                        <label for="exampleInputUsername1" class="form-label">Телефон</label>
-                        <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}"
-                               placeholder="Телефон">
+                        <label class="form-label">Телефон</label>
+                        <input type="text" class="form-control" th:field="*{phoneNumber}" placeholder="Телефон">
                     </div>
                     <div class="mb-3">
-                        <label for="exampleInputPassword1" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}"
-                               placeholder="e-mail">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" th:field="*{email}" placeholder="Email">
                     </div>
-                    <button type="submit" class="btn btn-primary">Новый заказчик</button>
+
+                    <input type="hidden" th:field="*{managerUsername}">
+                    <input type="hidden" th:field="*{account.id}">
+
+                    <button type="submit" class="btn btn-success">Сохранить изменения</button>
                 </form>
 
 
             </div>
-            <div class="col">
+            <div th:if="${selectedCustomer == null}">
+                <p>Выберите клиента, чтобы увидеть подробности.</p>
 
-                <h6>Список клиентов</h6>
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Фирма</th>
-                        <th>Телефон</th>
-                        <th>Email</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="customer : ${customers}">
-                        <td th:text="${customer.username}">Имя клиента</td>
-                        <td th:text="${customer.phoneNumber}">Телефон</td>
-                        <td th:text="${customer.email}">Email клиента</td>
-                    </tr>
-                    </tbody>
-                </table>
-
-
-            </div>
-            <div class="col">
-                One of three columns
+                <p><strong>Итоговая стоимость тиснения:</strong> <span
+                        th:text="${selectedCustomer.postPress.totalPrice}"></span> руб.</p>
             </div>
         </div>
     </div>
-
-
-
-
-
 </div>
 
 

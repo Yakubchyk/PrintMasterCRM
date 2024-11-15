@@ -1,38 +1,34 @@
 package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
-import lombok.NonNull;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "stamping")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+
 public class PostPress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NonNull
-    private int quantity; //Количество
-
-    @NonNull
-    private BigDecimal oneOttiskPrice; //Стоимость одного оттиска
-
-    @NonNull
-    private BigDecimal montageWorkPrice; //Приладка
-
-    @NonNull
-    private BigDecimal oneQuadratMetterFoilPrice; //Квадратный метр стоимости фольги
-
-    @NonNull
-    private double widthSM; //Ширина
-
-    @NonNull
-    private double lengthSM; //Длинна
-
     @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
+    private int quantity;
+    private BigDecimal oneOttiskPrice;
+    private BigDecimal montageWorkPrice;
+    private BigDecimal oneQuadratMetterFoilPrice;
+    private double widthSM;
+    private double lengthSM;
+
+    @Transient
+    private BigDecimal totalPrice;
 }
