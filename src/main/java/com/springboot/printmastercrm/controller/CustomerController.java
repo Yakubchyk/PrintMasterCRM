@@ -19,11 +19,17 @@ public class CustomerController {
     CustomerService customerService;
 
     @GetMapping
-    public String profile(Model model, Authentication authentication) {
+    public String profile(Model model, Authentication authentication, @RequestParam(value = "id", required = false) Long id) {
         String managerUsername = authentication.getName();
         List<Customer> customers = customerService.getCustomersByManager(managerUsername);
         model.addAttribute("customers", customers);
         model.addAttribute("customer", new Customer());
+
+        if (id != null) {
+            Customer selectedCustomer = customerService.findById(id);
+            model.addAttribute("selectedCustomer", selectedCustomer);
+        }
+
         return "profile";
     }
 
@@ -41,21 +47,4 @@ public class CustomerController {
         return "redirect:/profile?id=" + updatedCustomer.getId();
     }
 
-    // рбработка и отображение форм расчета по тиснению--->
-    @GetMapping("/postpress")
-    public String postpressForm(@RequestParam("customerId") Long customerId, Model model) {
-        Customer customer = customerService.findById(customerId);
-        model.addAttribute("postpress", new PostPress());
-        model.addAttribute("customer", customer);
-        return "postpress";
-    }
-
-    @PostMapping("/postpress")
-    public String calculatePostpress(@ModelAttribute("postpress") PostPress postpress,
-                                     @RequestParam("customerId") Long customerId) {
-        Customer customer = customerService.findById(customerId);
-        postpress.setCustomer(customer);
-
-        return "redirect:/profile?customerId=" + customerId;
-    }
 }
