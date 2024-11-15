@@ -22,11 +22,17 @@ public class PostPress {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
+    @Column(unique = true, nullable = false)
     private int quantity;
+    @Column(unique = true, nullable = false)
     private BigDecimal oneOttiskPrice;
+    @Column(unique = true, nullable = false)
     private BigDecimal montageWorkPrice;
+    @Column(unique = true, nullable = false)
     private BigDecimal oneQuadratMetterFoilPrice;
+    @Column(unique = true, nullable = false)
     private double widthSM;
+    @Column(unique = true, nullable = false)
     private double lengthSM;
 
     @Transient

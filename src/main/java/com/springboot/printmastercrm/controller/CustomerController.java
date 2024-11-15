@@ -3,14 +3,12 @@ package com.springboot.printmastercrm.controller;
 import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.entity.PostPress;
 import com.springboot.printmastercrm.service.CustomerService;
-import com.springboot.printmastercrm.service.PostPressService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
@@ -18,26 +16,18 @@ import java.util.List;
 public class CustomerController {
 
     @Autowired
-    private CustomerService customerService;
-
-    @Autowired
-    private PostPressService postPressService;
+    CustomerService customerService;
 
     @GetMapping
-    public String profile(Model model, Authentication authentication, @RequestParam(value = "id", required = false) Long id) {
+    public String profile(Model model, Authentication authentication) {
         String managerUsername = authentication.getName();
         List<Customer> customers = customerService.getCustomersByManager(managerUsername);
         model.addAttribute("customers", customers);
         model.addAttribute("customer", new Customer());
-
-        if (id != null) {
-            Customer selectedCustomer = customerService.findById(id);
-            model.addAttribute("selectedCustomer", selectedCustomer);
-        }
-
         return "profile";
     }
 
+    // Обработка отправки формы регистрации нового клиента
     @PostMapping("/register")
     public String register(@ModelAttribute("customer") Customer customer, Authentication authentication) {
         String managerUsername = authentication.getName();
@@ -51,6 +41,7 @@ public class CustomerController {
         return "redirect:/profile?id=" + updatedCustomer.getId();
     }
 
+    // рбработка и отображение форм расчета по тиснению--->
     @GetMapping("/postpress")
     public String postpressForm(@RequestParam("customerId") Long customerId, Model model) {
         Customer customer = customerService.findById(customerId);
@@ -60,14 +51,11 @@ public class CustomerController {
     }
 
     @PostMapping("/postpress")
-    public String calculatePostpress(@ModelAttribute("postpress") PostPress postPress,
-                                     @RequestParam("customerId") Long customerId, Model model) {
-        BigDecimal totalCost = postPressService.calculateTotalCost(postPress);
-        postPress.setCustomer(customerService.findById(customerId));
-        model.addAttribute("result", totalCost);
+    public String calculatePostpress(@ModelAttribute("postpress") PostPress postpress,
+                                     @RequestParam("customerId") Long customerId) {
+        Customer customer = customerService.findById(customerId);
+        postpress.setCustomer(customer);
 
-        postPressService.savePostPress(postPress);
-
-        return "redirect:/profile?id=" + customerId;
+        return "redirect:/profile?customerId=" + customerId;
     }
 }
