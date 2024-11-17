@@ -31,7 +31,16 @@
                     <a class="nav-link" href="/profile">Личный Кабинет</a>
                 </li>
 
+                <li class="nav-item" sec:authorize="hasRole('ROLE_ADMIN')">
+                    <a class="nav-link" href="/admin/settings">Admin Panel</a>
+                </li>
+
                 <li class="nav-item" sec:authorize="hasRole('ROLE_MANAGER')">
+                    <form th:action="@{/account/logout}" method="post">
+                        <button type="submit" class="btn">Выход</button>
+                    </form>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ROLE_ADMIN')">
                     <form th:action="@{/account/logout}" method="post">
                         <button type="submit" class="btn">Выход</button>
                     </form>

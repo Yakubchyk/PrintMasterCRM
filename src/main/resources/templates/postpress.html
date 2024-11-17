@@ -8,40 +8,38 @@
 <div class="container text-center">
     <h3>Калькулятор расчета стоимости</h3>
     <form th:action="@{/profile/postpress}" th:object="${postpress}" method="post">
-        <input type="hidden" name="customerId" th:value="${customer.id}">
+        <input type="hidden" name="customerId" th:value="${customerId}">
 
-            <div class="col-md-4 mb-3">
-                <label>Стоимость оттиска</label>
-                <input type="text" class="form-control" th:field="*{oneOttiskPrice}">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label>Стоимость приладки</label>
-                <input type="text" class="form-control" th:field="*{montageWorkPrice}">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label>Стоимость фольги М2.</label>
-                <input type="text" class="form-control" th:field="*{oneQuadratMetterFoilPrice}">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label>Ширина в СМ.</label>
-                <input type="text" class="form-control" th:field="*{widthSM}">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label>Длинна в СМ.</label>
-                <input type="text" class="form-control" th:field="*{lengthSM}">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label>Тираж ШТ.</label>
-                <input type="text" class="form-control" th:field="*{quantity}">
-            </div>
-
-            <div class="alert alert-info mt-3" role="alert">
-                <h5>Итого: <span th:text="${result}"></span> руб.</h5>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Сохранить расчет</button>
-        </form>
-
+        <div>
+            <label>Стоимость оттиска:</label>
+            <input type="number" step="0.01" th:field="*{oneOttiskPrice}" readonly>
+        </div>
+        <div>
+            <label>Стоимость приладки:</label>
+            <input type="number" step="0.01" th:field="*{montageWorkPrice}" readonly>
+        </div>
+        <div>
+            <label>Стоимость фольги (м²):</label>
+            <input type="number" step="0.01" th:field="*{oneQuadratMetterFoilPrice}">
+        </div>
+        <div>
+            <label>Ширина (см):</label>
+            <input type="number" th:field="*{widthSM}">
+        </div>
+        <div>
+            <label>Длина (см):</label>
+            <input type="number" th:field="*{lengthSM}">
+        </div>
+        <div>
+            <label>Тираж:</label>
+            <input type="number" th:field="*{quantity}">
+        </div>
+        <div>
+            <label>Общая стоимость:</label>
+            <input type="number" th:field="*{totalPrice}" readonly>
+        </div>
+        <button type="submit">Сохранить расчет</button>
+    </form>
 </div>
 
 </body>

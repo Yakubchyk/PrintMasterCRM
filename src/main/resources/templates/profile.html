@@ -78,11 +78,34 @@
                     <input type="hidden" th:field="*{account.id}">
                     <button type="submit" class="btn btn-success">Сохранить изменения</button>
                 </form>
-                <!-- Кнопка удаления -->
+
+                <div th:if="${selectedCustomer != null}">
+                    <h6>Расчеты тиснения</h6>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Тираж</th>
+                            <th>Стоимость</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="postpress : ${postPressList}">
+                            <td th:text="${postpress.quantity}"></td>
+                            <td th:text="${postpress.totalPrice}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <form th:action="@{/profile/postpress}" method="post">
+                        <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">
+                        <button type="submit" class="btn btn-primary">Добавить расчет</button>
+                    </form>
+                </div>
+
                 <form th:action="@{/profile/delete}" method="post" class="mt-3">
                     <input type="hidden" name="id" th:value="${selectedCustomer.id}">
                     <button type="submit" class="btn btn-danger">Удалить клиента</button>
-                </form>
+
             </div>
             <div th:if="${selectedCustomer == null}">
 

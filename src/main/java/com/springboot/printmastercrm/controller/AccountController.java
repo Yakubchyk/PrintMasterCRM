@@ -25,7 +25,11 @@ public class AccountController {
 
     @PostMapping("/register")
     public String register(@ModelAttribute Account account) {
-        accountService.save(account);
+        if (account.getRoles().contains(Account.Role.ROLE_ADMIN)) {
+            accountService.saveAdmin(account);
+        } else {
+            accountService.save(account);
+        }
         return "redirect:/";
     }
 

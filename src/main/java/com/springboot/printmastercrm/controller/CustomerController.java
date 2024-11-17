@@ -1,7 +1,9 @@
 package com.springboot.printmastercrm.controller;
 
 import com.springboot.printmastercrm.entity.Customer;
+import com.springboot.printmastercrm.entity.PostPress;
 import com.springboot.printmastercrm.service.CustomerService;
+import com.springboot.printmastercrm.service.PostPressService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -17,6 +19,9 @@ public class CustomerController {
     @Autowired
     CustomerService customerService;
 
+    @Autowired
+    private PostPressService postPressService;
+
     @GetMapping
     public String profile(Model model, Authentication authentication, @RequestParam(value = "id", required = false) Long id) {
         String managerUsername = authentication.getName();
@@ -27,10 +32,21 @@ public class CustomerController {
         if (id != null) {
             Customer selectedCustomer = customerService.findById(id);
             model.addAttribute("selectedCustomer", selectedCustomer);
+
+            List<PostPress> postPressList = postPressService.findByCustomerId(id);
+            model.addAttribute("postPressList", postPressList);
+
         }
 
         return "profile";
     }
+
+    @PostMapping("/postpress")
+    public String saveCalculation(@ModelAttribute PostPress postPress) {
+        postPressService.save(postPress);
+        return "redirect:/profile?id=" + postPress.getCustomer().getId();
+    }
+
 
     @PostMapping("/register")
     public String register(@ModelAttribute("customer") Customer customer, Authentication authentication) {

@@ -29,6 +29,13 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(account);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public void saveAdmin(Account account) {
+        account.setPassword(new BCryptPasswordEncoder(11).encode(account.getPassword()));
+        account.setRoles(Set.of(Account.Role.ROLE_ADMIN));
+        accountRepository.save(account);
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<Account> byUsername = accountRepository.findByUsername(username);

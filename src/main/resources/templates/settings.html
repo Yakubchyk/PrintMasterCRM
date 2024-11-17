@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head th:insert="_bootstrap::link">
+    <meta charset="UTF-8">
+    <title>Админ-панель: Настройки</title>
+</head>
+<body>
+<header th:insert="_header.html"></header>
+
+<h2>Управление расчетными параметрами</h2>
+<form th:action="@{/admin/settings}" th:object="${settings}" method="post">
+    <div>
+        <label>Стоимость приладки:</label>
+        <label>
+            <input type="number" step="0.01" th:field="*{montageWorkPrice}">
+        </label>
+    </div>
+    <div>
+        <label>Стоимость оттиска:</label>
+        <label>
+            <input type="number" step="0.01" th:field="*{oneOttiskPrice}">
+        </label>
+    </div>
+    <div>
+        <label>Стоимость фольги (за м²):</label>
+        <label>
+            <input type="number" step="0.01" th:field="*{oneQuadratMetterFoilPrice}">
+        </label>
+    </div>
+    <button type="submit">Сохранить</button>
+
+</form>
+
+<th:block th:insert="_bootstrap::script"></th:block>
+
+</body>
+</html>

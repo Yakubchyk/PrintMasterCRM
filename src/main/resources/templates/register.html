@@ -34,6 +34,15 @@
                     <input type="password" class="form-control" id="exampleInputPassword1" th:field="*{password}"
                            placeholder="Password">
                 </div>
+                <div>
+                    <label>Статус:</label>
+                    <label>
+                        <select th:field="*{roles}">
+                            <option class="form-label" value="ROLE_MANAGER">Пользователь</option>
+                            <option class="form-label" value="ROLE_ADMIN">Администратор</option>
+                        </select>
+                    </label>
+                </div>
                 <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
             </form>
         </div>
