@@ -53,19 +53,6 @@ public class CustomerService implements UserDetailsService {
         customerRepository.deleteById(id);
     }
 
-    public Customer existByUsername(String username) {
-        Optional<Customer> customer = customerRepository.findByUsername(username);
-        if (customer.isPresent()) {
-            return customer.get();
-        }
-        return null;
-    }
-
-    public Customer createCustomer(Customer customer) {
-        return customerRepository.save(customer);
-    }
-
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<Customer> byUsername = customerRepository.findByUsername(username);
@@ -74,4 +61,9 @@ public class CustomerService implements UserDetailsService {
         }
         throw new UsernameNotFoundException(username);
     }
+
+    public List<Customer> getAllCustomers() {
+        return customerRepository.findAll();
+    }
+
 }

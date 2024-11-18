@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -17,7 +16,6 @@ public class PostPressService {
     private static final double COEFFICIENT_NDS = 1.25;
     private static final double COEFFICIENT_WORK = 1.05;
     private static final int MIN_AREA = 50;
-
 
     @Autowired
     private PostPressRepository postPressRepository;
@@ -35,6 +33,11 @@ public class PostPressService {
         postPress.setTotalPrice(totalCost);
         postPressRepository.save(postPress);
     }
+
+    public void deletePostPressById(Long id) {
+        postPressRepository.deleteById(id);
+    }
+
 
     public BigDecimal calculateTotal(PostPress postPress, Setting settings) {
 
@@ -54,19 +57,6 @@ public class PostPressService {
         postPress.setTotalPrice(BigDecimal.valueOf(totalWorkPrice + totalFoilExpense));
 
         return postPress.getTotalPrice();
-
-
-//        double rawArea = postPress.getWidthSM() * postPress.getLengthSM();
-//        BigDecimal area = BigDecimal.valueOf(Math.max(rawArea, 50))
-//                .divide(BigDecimal.valueOf(10000), RoundingMode.HALF_UP);
-//
-//        BigDecimal ndsCoefficient = BigDecimal.valueOf(1.25);
-//        BigDecimal workCoefficient = BigDecimal.valueOf(1.05);
-//
-//        BigDecimal total = settings.getMontageWorkPrice().multiply(workCoefficient)
-//                .add(settings.getOneOttiskPrice().multiply(new BigDecimal(postPress.getQuantity())).multiply(workCoefficient))
-//                .add(settings.getFoilPrice().multiply(area).multiply(ndsCoefficient));
-//
-//        return total.setScale(2, RoundingMode.HALF_UP);
     }
+
 }

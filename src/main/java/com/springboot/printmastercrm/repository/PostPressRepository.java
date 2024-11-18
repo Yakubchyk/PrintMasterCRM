@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface PostPressRepository extends JpaRepository<PostPress, Long> {
     List<PostPress> findByCustomerId(Long customerId);
+
+    void deleteById(Long id);
 }

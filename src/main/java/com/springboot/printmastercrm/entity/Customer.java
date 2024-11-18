@@ -24,6 +24,7 @@ public class Customer {
 
     private String managerUsername;
 
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;

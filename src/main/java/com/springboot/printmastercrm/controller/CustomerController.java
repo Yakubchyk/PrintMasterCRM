@@ -20,7 +20,7 @@ public class CustomerController {
     CustomerService customerService;
 
     @Autowired
-    private PostPressService postPressService;
+    PostPressService postPressService;
 
     @GetMapping
     public String profile(Model model, Authentication authentication, @RequestParam(value = "id", required = false) Long id) {
@@ -42,9 +42,19 @@ public class CustomerController {
     }
 
     @PostMapping("/postpress")
-    public String saveCalculation(@ModelAttribute PostPress postPress) {
+    public String saveCalculation(@ModelAttribute PostPress postPress, @RequestParam Long customerId) {
+        Customer customer = customerService.findById(customerId);
+        postPress.setCustomer(customer);
+
         postPressService.save(postPress);
-        return "redirect:/profile?id=" + postPress.getCustomer().getId();
+
+        return "redirect:/profile?id=" + customer.getId();
+    }
+
+    @PostMapping("/postpress/delete")
+    public String deletePostPress(@RequestParam("postPressId") Long postPressId, @RequestParam Long customerId) {
+        postPressService.deletePostPressById(postPressId);
+        return "redirect:/profile?id=" + customerId;
     }
 
 

@@ -11,14 +11,13 @@ public class SettingService {
     @Autowired
     private SettingRepository settingRepository;
 
-    // Получение текущих настроек (с одним экземпляром в базе)
     public Setting getSettings() {
         return settingRepository.findById(1L).orElse(new Setting());
     }
 
-    // Сохранение обновленных настроек
     public void saveSettings(Setting settings) {
-        settings.setId(1L); // Устанавливаем фиксированный ID, чтобы поддерживать единственную запись
+        settings.setId(1L);
         settingRepository.save(settings);
     }
+
 }

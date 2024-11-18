@@ -35,15 +35,16 @@
                            placeholder="Password">
                 </div>
                 <div>
-                    <label>Статус:</label>
+
                     <label>
-                        <select th:field="*{roles}">
-                            <option class="form-label" value="ROLE_MANAGER">Пользователь</option>
+                        <select class="form-select" th:field="*{roles}" aria-label="Default select example">
+
+                            <option class="form-label" value="ROLE_MANAGER">Менеджер</option>
                             <option class="form-label" value="ROLE_ADMIN">Администратор</option>
                         </select>
                     </label>
                 </div>
-                <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                <button type="submit" class="btn btn-primary mt-3">Зарегистрироваться</button>
             </form>
         </div>
         <div class="col">
