@@ -23,13 +23,9 @@ public class CustomerController {
 
     @Autowired
     CustomerService customerService;
-
     @Autowired
     PostPressService postPressService;
-    @Autowired
-    private AccountService accountService;
-    @Autowired
-    private OrderService orderService;
+
 
     @GetMapping
     public String profile(Model model, Authentication authentication, @RequestParam(value = "id", required = false) Long id) {
@@ -102,12 +98,16 @@ public class CustomerController {
 
     @GetMapping("/order")
     public String order(@RequestParam("customerId") Long customerId, Model model) {
+
+        List<PostPress> postPress = postPressService.findByCustomerId(customerId);
+        if (postPress == null) {
+            throw new RuntimeException("PostPress not found for Customer ID: " + customerId);
+        }
+
         Customer customer = customerService.findById(customerId);
         if (customer == null) {
             throw new RuntimeException("Customer not found for ID: " + customerId);
         }
-
-        PostPress postPress = postPressService.findById(customerId);
 
         Order order = new Order();
         order.setCustomer(customer);

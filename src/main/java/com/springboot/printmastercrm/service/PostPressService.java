@@ -64,8 +64,4 @@ public class PostPressService {
 
     }
 
-    public PostPress findById(Long id) {
-        return postPressRepository.findById(id).orElse(null);
-
-    }
 }

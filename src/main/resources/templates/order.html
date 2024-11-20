@@ -14,14 +14,29 @@
         <div class="col-3"></div>
         <div class="col-6">
             <h2>Коммерческое предложение</h2>
-            <!-- Данные клиента -->
+
             <div>
                 <p>Название организации: <span th:text="${customer.username}">Имя клиента</span></p>
                 <p>Телефон: <span th:text="${customer.phoneNumber}">Телефон клиента</span></p>
                 <p>Email: <span th:text="${customer.email}">Email клиента</span></p>
             </div>
 
-            <!-- Форма для создания предложения -->
+            <div>
+                <h4>Предварительные расчеты по работам</h4>
+                <ul>
+                    <li th:each="pp : ${postPress}">
+                        Тираж: <span th:text="${pp.quantity}"></span>,
+                        Стоимость: <span th:text="${pp.totalPrice}"></span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- <div>
+                <p>Тираж: <span th:text="${postPress.quantity}">Тираж</span></p>
+                <p>Стоимость <span th:text="${postPress.totalPrice}"></span></p>
+            </div>
+-->
+
             <form th:action="@{/profile/ordeer}" method="post">
                 <input type="hidden" name="customerId" th:value="${customer.id}">
 
