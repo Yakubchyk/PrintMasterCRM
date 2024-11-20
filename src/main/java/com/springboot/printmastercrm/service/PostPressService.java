@@ -59,4 +59,13 @@ public class PostPressService {
         return postPress.getTotalPrice();
     }
 
+    public List<PostPress> findAll() {
+        return postPressRepository.findAll();
+
+    }
+
+    public PostPress findById(Long id) {
+        return postPressRepository.findById(id).orElse(null);
+
+    }
 }

@@ -92,30 +92,23 @@
                         <tr th:each="postpress : ${postPressList}">
                             <td th:text="${postpress.quantity}"></td>
                             <td th:text="${postpress.totalPrice}"></td>
-                            <td>
-                                <form th:action="@{/profile/postpress/delete}" method="post">
-                                    <input type="hidden" name="postPressId" th:value="${postpress.id}">
-                                    <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">
-                                    <button type="submit" class="btn btn-danger">Удалить расчет</button>
-                                </form>
-                            </td>
                         </tr>
                         </tbody>
                     </table>
 
-                    <form th:action="@{/profile/postpress}" method="post">
+                    <form th:action="@{/profile/postpress}" method="get">
                         <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">
                         <button type="submit" class="btn btn-primary">Добавить расчет</button>
                     </form>
 
-                </div>
+                    <div class="mt-3">
+                    <form th:action="@{/profile/order}" method="get">
+                        <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">
+                        <button type="submit" class="btn btn-primary">Создать предложение</button>
+                    </form>
+                    </div>
 
-                <form th:action="@{/profile/delete}" method="post" class="mt-3">
-                    <input type="hidden" name="id" th:value="${selectedCustomer.id}">
-                    <button type="submit" class="btn btn-danger">Удалить клиента</button>
-                </form>
 
-            </div>
             <div th:if="${selectedCustomer == null}">
 
             </div>

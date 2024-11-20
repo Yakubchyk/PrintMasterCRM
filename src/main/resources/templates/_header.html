@@ -30,11 +30,6 @@
                 <li class="nav-item" sec:authorize="hasRole('ROLE_MANAGER')">
                     <a class="nav-link" href="/profile">Личный Кабинет</a>
                 </li>
-                <li class="nav-item" sec:authorize="hasRole('ROLE_MANAGER')">
-                    <form th:action="@{/profile/postpress}" method="post">
-                        <button type="submit" class="btn">Расчет тиснения</button>
-                    </form>
-                </li>
 
                 <li class="nav-item" sec:authorize="hasRole('ROLE_ADMIN')">
                     <a class="nav-link" href="/admin/settings">Admin Panel</a>

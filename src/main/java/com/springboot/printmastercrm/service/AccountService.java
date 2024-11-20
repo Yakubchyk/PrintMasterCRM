@@ -46,4 +46,8 @@ public class AccountService implements UserDetailsService {
 
         throw new UsernameNotFoundException(username);
     }
+
+    public Optional<Account> findByUsername(String username) {
+        return accountRepository.findByUsername(username);
+    }
 }

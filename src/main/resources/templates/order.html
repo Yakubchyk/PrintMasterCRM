@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head th:insert="_bootstrap::link">
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+<body>
+<header th:insert="_header.html"></header>
+
+
+<div class="container">
+    <div class="row align-items-start">
+        <div class="col-3">
+
+        </div>
+        <div class="col-6">
+            <h2>Коммерческое предложение</h2>
+            <div>
+                <p>Название организации: <span th:text="${customer.username}">Имя клиента</span></p>
+                <p>Телефон: <span th:text="${customer.phoneNumber}">Телефон клиента</span></p>
+                <p>Email: <span th:text="${customer.email}">Email клиента</span></p>
+            </div>
+
+            <form th:action="@{/profile/ordeer}" method="post">
+                <input type="hidden" name="customerId" th:value="${customer.id}">
+
+                <div class="mb-3">
+                    <label for="orderDetails" class="form-label">Детали заказа</label>
+                    <textarea id="orderDetails" name="orderDetails" class="form-control"
+                              placeholder="Детали заказа"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Создать предложение</button>
+            </form>
+
+        </div>
+        <div class="col-3">
+
+        </div>
+    </div>
+</div>
+
+<th:block th:insert="_bootstrap::script"></th:block>
+</body>
+</html>

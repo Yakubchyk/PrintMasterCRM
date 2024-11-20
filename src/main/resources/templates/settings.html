@@ -52,7 +52,7 @@
                             <td th:text="${customer.managerUsername}"></td>
                             <td th:text="${customer.username}"></td>
                             <td>
-                                <form th:action="@{/profile/delete}" method="post">
+                                <form th:action="@{/admin/settings/deleteCustomer}" method="post">
                                     <input type="hidden" name="id" th:value="${customer.id}">
                                     <button type="submit" class="btn btn-danger">Удалить</button>
                                 </form>
@@ -64,25 +64,27 @@
 
                 <div class="col">
                     <h3>Заказы клиентов</h3>
-                    <div th:each="customer : ${customers}">
-                        <h4 th:text="${customer.username}"></h4>
+
+
+
                         <table class="table">
                             <thead>
                             <tr>
-                                <th>Номер заказа</th>
+                                <th>Заказчик</th>
+                                <th>Тираж</th>
                                 <th>Стоимость</th>
                                 <th>Действия</th>
                             </tr>
                             </thead>
                             <tbody>
-
+                            <!--/*@thymesVar id="postpress" type="com.springboot.printmastercrm.entity.PostPress"*/-->
                             <tr th:each="postpress : ${postPressList}">
+                                <td th:text="${postpress.customer.username}"></td>
                                 <td th:text="${postpress.quantity}"></td>
                                 <td th:text="${postpress.totalPrice}"></td>
                                 <td>
-                                    <form th:action="@{/profile/postpress/delete}" method="post">
+                                    <form th:action="@{/admin/settings/delete}" method="post">
                                         <input type="hidden" name="postPressId" th:value="${postpress.id}">
-                                        <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">
                                         <button type="submit" class="btn btn-danger">Удалить</button>
                                     </form>
                                 </td>
