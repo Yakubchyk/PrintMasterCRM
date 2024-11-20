@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -102,6 +103,10 @@ public class CustomerController {
     @GetMapping("/order")
     public String order(@RequestParam("customerId") Long customerId, Model model) {
         Customer customer = customerService.findById(customerId);
+        if (customer == null) {
+            throw new RuntimeException("Customer not found for ID: " + customerId);
+        }
+
         PostPress postPress = postPressService.findById(customerId);
 
         Order order = new Order();
@@ -109,10 +114,19 @@ public class CustomerController {
 
         model.addAttribute("order", order);
         model.addAttribute("customer", customer);
-        model.addAttribute("customer", new Customer());
         model.addAttribute("postPress", postPress);
 
         return "order";
+    }
+
+    @PostMapping("/profile/register")
+    public String registerCustomer(@ModelAttribute Customer customer, Principal principal) {
+
+        String managerUsername = principal.getName();
+
+        customerService.createCustomerForManager(customer, managerUsername);
+        
+        return "redirect:/profile";
     }
 
 
