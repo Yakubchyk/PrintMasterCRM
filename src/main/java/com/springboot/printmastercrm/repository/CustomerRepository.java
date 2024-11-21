@@ -13,10 +13,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByUsername(String username);
 
-    Optional<Customer> findAllById(Long id);
-
-    boolean existsByUsername(String username);
-
     List<Customer> findByManagerUsername(String managerUsername);
 
 }

@@ -152,10 +152,5 @@ public class CustomerController {
         return "redirect:/profile?id=" + customerId;
     }
 
-    @PostMapping("/printing/delete")
-    public String deletePrinting(@RequestParam("printingId") Long printingId, @RequestParam("customerId") Long customerId) {
-        printingService.deleteById(printingId);
-        return "redirect:/profile?id=" + customerId;
-    }
 
 }

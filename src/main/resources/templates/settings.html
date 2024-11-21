@@ -101,6 +101,35 @@
                         </tr>
                         </tbody>
                     </table>
+
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Заказчик</th>
+                            <th>Бумага</th>
+                            <th>Цветность</th>
+                            <th>Тираж</th>
+                            <th>Стоимость</th>
+                            <th>Действия</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="printing : ${printingList}">
+                            <td th:text="${printing.customer.username}"></td>
+                            <td th:text="${printing.papier}"></td>
+                            <td th:text="${printing.colour}"></td>
+                            <td th:text="${printing.quantity}"></td>
+                            <td th:text="${printing.totalCost}"></td>
+                            <td>
+                                <form th:action="@{/admin/printing/delete}" method="post">
+                                    <input type="hidden" name="printingId" th:value="${printing.id}">
+
+                                    <button type="submit" class="btn btn-danger">Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

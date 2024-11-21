@@ -68,6 +68,12 @@ public class AdminController {
         return "redirect:/admin/settings";
     }
 
+    @PostMapping("/printing/delete")
+    public String deletePrinting(@RequestParam("printingId") Long printingId) {
+        printingService.deleteById(printingId);
+        return "redirect:/admin/settings";
+    }
+
     @PostMapping("/settings/deleteCustomer")
     public String deleteCustomer(@RequestParam("id") Long id) {
         customerService.deleteCustomer(id);
