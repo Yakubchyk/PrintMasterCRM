@@ -2,9 +2,10 @@ package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "printing")
@@ -16,17 +17,13 @@ public class Printing {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NonNull
-    private String papier;
-
-    @NonNull
-    private String colour;
-
-    @NonNull
-    private int quantity;
-
     @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    private String papier; // плотность бумаги. 90g/m2 - 350g/m2
+    private String colour; //печать с одной стороны или с двух. 4+0, 4+4
+    private Integer quantity; //тираж
+    private double totalCost;
 
 }

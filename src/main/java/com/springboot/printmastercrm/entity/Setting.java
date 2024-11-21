@@ -19,4 +19,6 @@ public class Setting {
     private double montageWorkPrice; // Стоимость приладки
     private double oneOttiskPrice;   // Стоимость оттиска
     private double oneQuadratMetterFoilPrice; //стоимость одного квадратного метра фольги
+
+    private double pricePrint;
 }

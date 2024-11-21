@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:insert="_bootstrap::link">
+  <meta charset="UTF-8">
+  <title>Расчет печати</title>
+</head>
+<body>
+<header th:insert="_header.html"></header>
+
+<div class="container">
+  <div class="row align-items-start">
+    <div class="col"></div>
+    <div class="col mt-3">
+      <h4>Калькулятор расчета печати</h4>
+      <form th:action="@{/profile/printing}" th:object="${printing}" method="post">
+        <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">
+
+        <div class="mb-3">
+          <label>Плотность бумаги:</label>
+          <select class="form-control" th:field="*{papier}">
+            <option value="90g/m2">90g/m2</option>
+            <option value="150g/m2">150g/m2</option>
+            <option value="200g/m2">200g/m2</option>
+            <option value="300g/m2">300g/m2</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label>Цветность:</label>
+          <select class="form-control" th:field="*{colour}">
+            <option value="4+0">4+0</option>
+            <option value="4+4">4+4</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label>Тираж:</label>
+          <input type="number" class="form-control" th:field="*{quantity}">
+        </div>
+
+        <button type="submit" class="btn btn-success">Сохранить расчет</button>
+      </form>
+    </div>
+    <div class="col"></div>
+  </div>
+</div>
+
+<th:block th:insert="_bootstrap::script"></th:block>
+</body>
+</html>

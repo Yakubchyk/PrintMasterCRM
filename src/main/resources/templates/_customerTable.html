@@ -1,0 +1,16 @@
+<table class="table">
+  <thead>
+  <tr>
+    <th>Имя клиента</th>
+    <th>Телефон</th>
+    <th>Email</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="customer : ${customers}">
+    <td th:text="${customer.username}"></td>
+    <td th:text="${customer.phoneNumber}"></td>
+    <td th:text="${customer.email}"></td>
+  </tr>
+  </tbody>
+</table>

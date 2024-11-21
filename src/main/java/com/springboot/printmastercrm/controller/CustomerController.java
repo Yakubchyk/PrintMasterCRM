@@ -1,20 +1,16 @@
 package com.springboot.printmastercrm.controller;
 
-import com.springboot.printmastercrm.entity.Account;
-import com.springboot.printmastercrm.entity.Customer;
-import com.springboot.printmastercrm.entity.Order;
-import com.springboot.printmastercrm.entity.PostPress;
-import com.springboot.printmastercrm.service.AccountService;
+import com.springboot.printmastercrm.entity.*;
 import com.springboot.printmastercrm.service.CustomerService;
-import com.springboot.printmastercrm.service.OrderService;
 import com.springboot.printmastercrm.service.PostPressService;
+import com.springboot.printmastercrm.service.PrintingService;
+import com.springboot.printmastercrm.service.SettingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -25,7 +21,10 @@ public class CustomerController {
     CustomerService customerService;
     @Autowired
     PostPressService postPressService;
-
+    @Autowired
+    PrintingService printingService;
+    @Autowired
+    SettingService settingService;
 
     @GetMapping
     public String profile(Model model, Authentication authentication, @RequestParam(value = "id", required = false) Long id) {
@@ -41,10 +40,13 @@ public class CustomerController {
             List<PostPress> postPressList = postPressService.findByCustomerId(id);
             model.addAttribute("postPressList", postPressList);
 
+            List<Printing> printingList = printingService.findByCustomerId(id);
+            model.addAttribute("printingList", printingList);
         }
 
         return "profile";
     }
+
 
     @PostMapping("/postpress")
     public String saveCalculation(@ModelAttribute PostPress postPress, @RequestParam Long customerId) {
@@ -83,6 +85,7 @@ public class CustomerController {
         return "redirect:/profile";
     }
 
+
     @PostMapping("/update")
     public String updateCustomer(@ModelAttribute("selectedCustomer") Customer updatedCustomer) {
         customerService.updateCustomer(updatedCustomer.getId(), updatedCustomer);
@@ -119,15 +122,40 @@ public class CustomerController {
         return "order";
     }
 
-    @PostMapping("/profile/register")
-    public String registerCustomer(@ModelAttribute Customer customer, Principal principal) {
+    @GetMapping("/printing")
+    public String printing(@RequestParam("customerId") Long customerId, Model model) {
+        Customer customer = customerService.findById(customerId);
+        if (customer == null) {
+            throw new IllegalArgumentException("Customer not found for ID: " + customerId);
+        }
 
-        String managerUsername = principal.getName();
+        Setting settings = settingService.getSettings();
 
-        customerService.createCustomerForManager(customer, managerUsername);
-        
-        return "redirect:/profile";
+        model.addAttribute("selectedCustomer", customer);
+        model.addAttribute("printing", new Printing());
+        model.addAttribute("pricePrint", settings.getPricePrint()); // Добавляем pricePrint
+
+        return "printing";
     }
 
+    @PostMapping("/printing")
+    public String savePrinting(@ModelAttribute Printing printing, @RequestParam Long customerId) {
+        Customer customer = customerService.findById(customerId);
+        Setting settings = settingService.getSettings();
+
+        double totalPrice = settings.getPricePrint() * printing.getQuantity();
+        printing.setTotalCost(totalPrice);
+
+        printing.setCustomer(customer);
+        printingService.save(printing);
+
+        return "redirect:/profile?id=" + customerId;
+    }
+
+    @PostMapping("/printing/delete")
+    public String deletePrinting(@RequestParam("printingId") Long printingId, @RequestParam("customerId") Long customerId) {
+        printingService.deleteById(printingId);
+        return "redirect:/profile?id=" + customerId;
+    }
 
 }

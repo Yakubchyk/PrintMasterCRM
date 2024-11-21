@@ -2,9 +2,11 @@ package com.springboot.printmastercrm.controller;
 
 import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.entity.PostPress;
+import com.springboot.printmastercrm.entity.Printing;
 import com.springboot.printmastercrm.entity.Setting;
 import com.springboot.printmastercrm.service.CustomerService;
 import com.springboot.printmastercrm.service.PostPressService;
+import com.springboot.printmastercrm.service.PrintingService;
 import com.springboot.printmastercrm.service.SettingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,6 +26,8 @@ public class AdminController {
     private CustomerService customerService;
     @Autowired
     private PostPressService postPressService;
+    @Autowired
+    private PrintingService printingService;
 
     @GetMapping("/settings")
     public String getSettings(@RequestParam(value = "customerId", required = false) Long customerId, Model model) {
@@ -39,26 +43,18 @@ public class AdminController {
         } else {
             postPressList = postPressService.findAll();
         }
-        model.addAttribute("postPressList", postPressList);
 
+        List<Printing> printingList;
+        if (customerId != null) {
+            printingList = printingService.findByCustomerId(customerId);
+        } else {
+            printingList = printingService.findAll();
+        }
+        model.addAttribute("postPressList", postPressList);
+        model.addAttribute("printingList", printingList);
         return "settings";
     }
 
-
-//    @GetMapping("/settings")
-//    public String getSettings(Model model) {
-//
-//        List<Customer> customers = customerService.getAllCustomers();
-//        model.addAttribute("customers", customers);
-//
-//        Setting settings = settingService.getSettings();
-//        model.addAttribute("settings", settings);
-//
-//        List<PostPress> postPressList = postPressService.findByCustomerId(settings.getId());
-//        model.addAttribute("postPressList", postPressList);
-//
-//        return "settings";
-//    }
 
     @PostMapping("/settings")
     public String updateSettings(@ModelAttribute("settings") Setting updatedSettings) {
