@@ -16,9 +16,9 @@ plugins {
 }
 
 flyway {
-    url = 'jdbc:postgresql://localhost:5432/postgres'
+    url = 'jdbc:postgresql://junction.proxy.rlwy.net:30722/railway'
     user = 'postgres'
-    password = 'admin'
+    password = 'LkddIOkSGlZgnMhlbzFqavZFjpVtSBZt'
     schemas = ['public']
     cleanDisabled = false
 
@@ -61,7 +61,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
-    runtimeOnly 'org.springframework.boot:spring-boot-docker-compose'
+
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

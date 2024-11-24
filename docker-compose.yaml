@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: printmasterdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
+      POSTGRES_PASSWORD: LkddIOkSGlZgnMhlbzFqavZFjpVtSBZt
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
