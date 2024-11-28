@@ -1,4 +1,3 @@
-# Используем базовый образ Gradle с JDK 17
 FROM gradle:7.6.0-jdk17 AS build
 WORKDIR /app
 COPY build.gradle settings.gradle ./

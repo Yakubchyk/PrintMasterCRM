@@ -1,15 +1,92 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head th:insert="_bootstrap::link">
     <meta charset="UTF-8">
     <title>Home</title>
 </head>
+
 <body>
 <header th:insert="_header.html"></header>
 
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Добро пожаловать в PostMasterCRM!</h1>
+    <p class="text-center">Используйте приведённые ниже ссылки, чтобы воспользоваться функционалом системы.</p>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+        <!-- Домой -->
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Домой</h5>
+                    <p class="card-text">Главная страница системы, откуда вы можете перейти ко всем доступным разделам.</p>
+                    <a href="/" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Регистрация -->
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Регистрация</h5>
+                    <p class="card-text">В этом разделе вы можете зарегистрироваться, указав статус профиля: Администратор или Менеджер.</p>
+                    <a href="/account/register" class="btn btn-primary" sec:authorize="isAnonymous()">Перейти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вход -->
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Вход</h5>
+                    <p class="card-text">Авторизуйтесь, чтобы получить доступ к вашему профилю и функционалу системы.</p>
+                    <a href="/account/login" class="btn btn-primary" sec:authorize="isAnonymous()">Перейти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Личный Кабинет -->
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Личный Кабинет</h5>
+                    <p class="card-text">Раздел для Менеджеров, где можно управлять персональной информацией и проектами.</p>
+                    <a href="/profile" class="btn btn-primary" sec:authorize="hasRole('ROLE_MANAGER')">Перейти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Admin Panel</h5>
+                    <p class="card-text">Раздел для Администраторов, где можно настраивать параметры системы и управлять пользователями.</p>
+                    <a href="/admin/settings" class="btn btn-primary" sec:authorize="hasRole('ROLE_ADMIN')">Перейти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Выход -->
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Выход</h5>
+                    <p class="card-text">Выйдите из системы, чтобы завершить текущую сессию.</p>
+                    <form th:action="@{/account/logout}" method="post" sec:authorize="hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')">
+                        <button type="submit" class="btn btn-danger">Выйти</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 <th:block th:insert="_bootstrap::script"></th:block>
 </body>
+
 </html>
