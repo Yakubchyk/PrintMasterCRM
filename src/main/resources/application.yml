@@ -2,9 +2,9 @@ spring:
   application:
     name: PrintMasterCRM
   datasource:
-    url: jdbc:postgresql://junction.proxy.rlwy.net:30722/railway
+    url: jdbc:postgresql://junction.proxy.rlwy.net:39845/railway
     username: postgres
-    password: LkddIOkSGlZgnMhlbzFqavZFjpVtSBZt
+    password: wsCbjEzwguDWesEosLSYRJoFnIAJqvqe
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
