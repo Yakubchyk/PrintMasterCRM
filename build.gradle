@@ -16,9 +16,9 @@ plugins {
 }
 
 flyway {
-    url = 'jdbc:postgresql://junction.proxy.rlwy.net:30722/railway'
+    url = 'jdbc:postgresql://junction.proxy.rlwy.net:39845/railway'
     user = 'postgres'
-    password = 'LkddIOkSGlZgnMhlbzFqavZFjpVtSBZt'
+    password = 'wsCbjEzwguDWesEosLSYRJoFnIAJqvqe'
     schemas = ['public']
     cleanDisabled = false
 
