@@ -48,12 +48,10 @@ public class AdminController {
             printingList = printingService.findAll();
         }
         List<Account> accountList;
-        if (customerId != null) {
-            accountList = accountService.findById(customerId);
 
-        } else {
-            accountList = accountService.findAll();
-        }
+        accountList = accountService.findById(customerId);
+
+
         model.addAttribute("postPressList", postPressList);
         model.addAttribute("printingList", printingList);
         model.addAttribute("accountList", accountList);

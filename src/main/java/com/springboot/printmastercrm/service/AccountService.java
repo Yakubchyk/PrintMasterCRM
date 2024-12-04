@@ -59,7 +59,4 @@ public class AccountService implements UserDetailsService {
         return accountRepository.findAll();
     }
 
-    public List<Account> findAll() {
-        return accountRepository.findAll();
-    }
 }
