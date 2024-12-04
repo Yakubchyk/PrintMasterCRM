@@ -1,9 +1,6 @@
 package com.springboot.printmastercrm.controller;
 
-import com.springboot.printmastercrm.entity.Customer;
-import com.springboot.printmastercrm.entity.PostPress;
-import com.springboot.printmastercrm.entity.Printing;
-import com.springboot.printmastercrm.entity.Setting;
+import com.springboot.printmastercrm.entity.*;
 import com.springboot.printmastercrm.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -50,8 +47,16 @@ public class AdminController {
         } else {
             printingList = printingService.findAll();
         }
+        List<Account> accountList;
+        if (customerId != null) {
+            accountList = accountService.findById(customerId);
+
+        } else {
+            accountList = accountService.findAll();
+        }
         model.addAttribute("postPressList", postPressList);
         model.addAttribute("printingList", printingList);
+        model.addAttribute("accountList", accountList);
         return "settings";
     }
 

@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -54,4 +55,11 @@ public class AccountService implements UserDetailsService {
         accountRepository.deleteById(managerId);
     }
 
+    public List<Account> findById(Long Id) {
+        return accountRepository.findAll();
+    }
+
+    public List<Account> findAll() {
+        return accountRepository.findAll();
+    }
 }
