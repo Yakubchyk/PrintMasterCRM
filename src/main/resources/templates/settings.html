@@ -139,7 +139,7 @@
 <div class="container">
     <div class="row align-items-start">
         <div class="col">
-            <h3>Список Менеджеров</h3>
+            <h3>Список Участников</h3>
             <table class="table">
                 <thead>
                 <tr>
@@ -153,7 +153,7 @@
                     <td th:text="${account.username}"></td>
                     <td>
                         <form th:action="@{/admin/settings/deleteManager}" method="post">
-                            <input type="hidden" name="id" th:value="${account.id}">
+                            <input type="hidden" name="id" th:value="${account.username}">
                             <button type="submit" class="btn btn-danger">Удалить</button>
                         </form>
                     </td>
