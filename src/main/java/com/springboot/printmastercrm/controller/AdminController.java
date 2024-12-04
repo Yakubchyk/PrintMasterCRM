@@ -4,14 +4,12 @@ import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.entity.PostPress;
 import com.springboot.printmastercrm.entity.Printing;
 import com.springboot.printmastercrm.entity.Setting;
-import com.springboot.printmastercrm.service.CustomerService;
-import com.springboot.printmastercrm.service.PostPressService;
-import com.springboot.printmastercrm.service.PrintingService;
-import com.springboot.printmastercrm.service.SettingService;
+import com.springboot.printmastercrm.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -28,6 +26,8 @@ public class AdminController {
     private PostPressService postPressService;
     @Autowired
     private PrintingService printingService;
+    @Autowired
+    private AccountService accountService;
 
     @GetMapping("/settings")
     public String getSettings(@RequestParam(value = "customerId", required = false) Long customerId, Model model) {
@@ -65,6 +65,17 @@ public class AdminController {
     @PostMapping("/settings/delete")
     public String deletePostPress(@RequestParam("postPressId") Long postPressId) {
         postPressService.deletePostPressById(postPressId);
+        return "redirect:/admin/settings";
+    }
+
+    @PostMapping("/settings/deleteManager")
+    public String deleteManager(@RequestParam("id") Long managerId, RedirectAttributes redirectAttributes) {
+        try {
+            accountService.deleteManagerById(managerId);
+            redirectAttributes.addFlashAttribute("successMessage", "Менеджер успешно удалён.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Ошибка при удалении менеджера: " + e.getMessage());
+        }
         return "redirect:/admin/settings";
     }
 

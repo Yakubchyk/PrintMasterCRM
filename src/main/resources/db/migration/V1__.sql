@@ -1,3 +1,4 @@
+
 CREATE TABLE account_roles
 (
     account_id BIGINT       NOT NULL,

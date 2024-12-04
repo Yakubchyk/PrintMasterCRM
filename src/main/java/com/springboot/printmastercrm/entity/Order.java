@@ -31,7 +31,6 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal postpressPrice;
 
-
     @Column(nullable = false)
     private BigDecimal totalCost;
 }
