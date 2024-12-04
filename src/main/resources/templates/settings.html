@@ -150,7 +150,7 @@
                 <tbody>
                 <!--/*@thymesVar id="account" type="com.springboot.printmastercrm.entity.Account"*/-->
                 <tr th:each="account : ${accounts}">
-                    <td th:text="${account.username}"></td>
+                    <td th:text="${account.name}"></td>
                     <td>
                         <form th:action="@{/admin/settings/deleteManager}" method="post">
                             <input type="hidden" name="id" th:value="${account.id}">
