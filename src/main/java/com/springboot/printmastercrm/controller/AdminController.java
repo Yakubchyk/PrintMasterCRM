@@ -72,9 +72,9 @@ public class AdminController {
     }
 
     @PostMapping("/settings/deleteManager")
-    public String deleteManager(@RequestParam("id") Long id) {
+    public String deleteManager(@RequestParam("id") Long managerId) {
 
-        accountService.deleteManagerById(id);
+        accountService.deleteManagerById(managerId);
 
         return "redirect:/admin/settings";
     }
