@@ -72,13 +72,10 @@ public class AdminController {
     }
 
     @PostMapping("/settings/deleteManager")
-    public String deleteManager(@RequestParam("id") Long managerId, RedirectAttributes redirectAttributes) {
-        try {
-            accountService.deleteManagerById(managerId);
-            redirectAttributes.addFlashAttribute("successMessage", "Менеджер успешно удалён.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Ошибка при удалении менеджера: " + e.getMessage());
-        }
+    public String deleteManager(@RequestParam("id") Long id) {
+
+        accountService.deleteManagerById(id);
+
         return "redirect:/admin/settings";
     }
 
