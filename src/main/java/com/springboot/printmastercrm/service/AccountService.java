@@ -49,9 +49,6 @@ public class AccountService implements UserDetailsService {
     }
 
     public void deleteManagerById(Long managerId) {
-        if (!accountRepository.existsById(managerId)) {
-            throw new IllegalArgumentException("Менеджер с ID " + managerId + " не найден.");
-        }
         accountRepository.deleteById(managerId);
     }
 
