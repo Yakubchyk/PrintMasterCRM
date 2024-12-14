@@ -4,6 +4,8 @@ import com.springboot.printmastercrm.entity.Account;
 import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.repository.AccountRepository;
 import com.springboot.printmastercrm.repository.CustomerRepository;
+import com.springboot.printmastercrm.repository.PostPressRepository;
+import com.springboot.printmastercrm.repository.PrintingRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +24,12 @@ public class CustomerService implements UserDetailsService {
     private CustomerRepository customerRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private PostPressService postPressService;
+    @Autowired
+    private PostPressRepository postPressRepository;
+    @Autowired
+    private PrintingRepository printingRepository;
 
     public List<Customer> getCustomersByManager(String managerUsername) {
         return customerRepository.findByManagerUsername(managerUsername);
@@ -49,9 +57,20 @@ public class CustomerService implements UserDetailsService {
         return customerRepository.save(updatedCustomer);
     }
 
+   // public void deleteCustomer(Long id) {
+   //     customerRepository.deleteById(id);
+   // }
+
     public void deleteCustomer(Long id) {
+
+        postPressRepository.deleteById(id);
+        printingRepository.deleteById(id);
+
         customerRepository.deleteById(id);
+
     }
+
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
