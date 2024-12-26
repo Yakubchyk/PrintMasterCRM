@@ -2,12 +2,12 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
-<head th:insert="_bootstrap::link">
+<head th:insert="~{_bootstrap::link}">
     <meta charset="UTF-8">
     <title>Home</title>
 </head>
 <body>
-<header th:insert="_header.html"></header>
+<header th:insert="~{_header.html}"></header>
 
 <div class="container">
     <div class="row align-items-start">
@@ -52,7 +52,7 @@
 </div>
 
 
-<th:block th:insert="_bootstrap::script"></th:block>
+<th:block th:insert="~{_bootstrap::script}"></th:block>
 </body>
 </html>
 

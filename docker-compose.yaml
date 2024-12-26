@@ -2,13 +2,13 @@ services:
   db:
     image: postgres:15
     restart: always
-    container_name: printmaster
+    container_name: printmaster_db
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_DB: printmasterdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: wsCbjEzwguDWesEosLSYRJoFnIAJqvqe
+      POSTGRES_PASSWORD: admin
     volumes:
-      - postgres_data:/var/lib/postgresql/data/pgdata
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
 

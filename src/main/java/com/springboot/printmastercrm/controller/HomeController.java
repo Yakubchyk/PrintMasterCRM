@@ -14,4 +14,5 @@ public class HomeController {
     public String home(@AuthenticationPrincipal Account account) {
         return "home";
     }
+
 }
