@@ -37,8 +37,7 @@
                     <input type="number" class="form-control" id="exampleInputName3" th:field="*{quantity}">
                 </div>
                 <div>
-                    <label>Общая стоимость:</label>
-                    <input type="number" th:field="*{totalPrice}" readonly>
+                    <input type="hidden" th:field="*{totalPrice}" readonly>
                 </div>
                 <button type="submit">Сохранить расчет</button>
             </form>

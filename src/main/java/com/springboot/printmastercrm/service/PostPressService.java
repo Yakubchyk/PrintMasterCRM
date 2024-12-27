@@ -38,10 +38,7 @@ public class PostPressService {
         postPressRepository.deleteById(id);
     }
 
-
     public BigDecimal calculateTotal(PostPress postPress, Setting settings) {
-
-
         double quadratMetter;
 
         if ((postPress.getWidthSM() * postPress.getLengthSM()) <= MIN_AREA) {
@@ -54,10 +51,41 @@ public class PostPressService {
 
         double totalWorkPrice = (settings.getMontageWorkPrice() + settings.getOneOttiskPrice() * postPress.getQuantity()) * COEFFICIENT_WORK;
 
-        postPress.setTotalPrice(BigDecimal.valueOf(totalWorkPrice + totalFoilExpense));
+        BigDecimal totalCost = BigDecimal.valueOf(totalWorkPrice + totalFoilExpense);
 
-        return postPress.getTotalPrice();
+        totalCost = totalCost.setScale(2, BigDecimal.ROUND_HALF_UP);
+
+        postPress.setTotalPrice(totalCost);
+
+        return totalCost;
     }
+
+//    public BigDecimal calculateTotal(PostPress postPress, Setting settings) {
+//
+//
+//        double quadratMetter;
+//
+//        if ((postPress.getWidthSM() * postPress.getLengthSM()) <= MIN_AREA) {
+//            quadratMetter = MIN_AREA / COEFFICIENT_METER;
+//        } else {
+//            quadratMetter = (postPress.getWidthSM() * postPress.getLengthSM()) / COEFFICIENT_METER;
+//        }
+//
+//        double totalFoilExpense = (((postPress.getQuantity() * quadratMetter) * COEFFICIENT_WORK) * settings.getOneQuadratMetterFoilPrice()) * COEFFICIENT_NDS;
+//
+//        double totalWorkPrice = (settings.getMontageWorkPrice() + settings.getOneOttiskPrice() * postPress.getQuantity()) * COEFFICIENT_WORK;
+//
+//        postPress.setTotalPrice(BigDecimal.valueOf(totalWorkPrice + totalFoilExpense));
+//
+//        // Суммируем итоговые значения
+//        BigDecimal totalCost = BigDecimal.valueOf(totalWorkPrice + totalFoilExpense);
+//
+//        // Округление до двух знаков после запятой
+//        totalCost = totalCost.setScale(2, BigDecimal.ROUND_HALF_UP);
+//
+//
+//        return postPress.getTotalPrice();
+//    }
 
     public List<PostPress> findAll() {
         return postPressRepository.findAll();

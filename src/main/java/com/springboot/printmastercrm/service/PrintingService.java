@@ -6,6 +6,7 @@ import com.springboot.printmastercrm.repository.PrintingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -43,7 +44,11 @@ public class PrintingService {
         double basePrice = setting.getPricePrint();
         double colorMultiplier = "4+4".equals(printing.getColour()) ? 2 : 1;
         double densityMultiplier = getDensityMultiplier(printing.getPapier());
-        return basePrice * colorMultiplier * printing.getQuantity() * densityMultiplier;
+        double rawCost = basePrice * colorMultiplier * printing.getQuantity() * densityMultiplier;
+
+        BigDecimal roundedCost = BigDecimal.valueOf(rawCost).setScale(2, BigDecimal.ROUND_HALF_UP);
+
+        return roundedCost.doubleValue();
     }
 
     private double getDensityMultiplier(String papier) {

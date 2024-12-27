@@ -9,7 +9,7 @@
 <body>
 <header th:insert="~{_header.html}"></header>
 
-<div class="container">
+<div class="container-fluid">
     <div class="row align-items-start">
 
         <div class="col-3 mt-3">
@@ -31,7 +31,6 @@
                            id="exampleInputPassword1">
                 </div>
 
-
                 <h5>Управление расчетом печати</h5>
 
                 <div class="mb-3">
@@ -40,7 +39,7 @@
                         <input type="number" step="0.01" th:field="*{pricePrint}" class="form-control">
                     </label>
                 </div>
-                <button type="submit" class="btn btn-primary">Сохранить параметры</button>
+                <button type="submit" class="btn btn-success">Сохранить изменения</button>
             </form>
         </div>
 
@@ -74,6 +73,7 @@
 
                 <div class="col">
                     <h3>Заказы клиентов</h3>
+                    <h5>Тиснение</h5>
 
 
                     <table class="table">
@@ -101,6 +101,7 @@
                         </tbody>
                     </table>
 
+                    <h5>Печать</h5>
                     <table class="table">
                         <thead>
                         <tr>
@@ -161,13 +162,11 @@
                 </tbody>
             </table>
 
-
         </div>
         <div class="col"></div>
         <div class="col"></div>
     </div>
 </div>
-
 
 <th:block th:insert="~{_bootstrap::script}"></th:block>
 
