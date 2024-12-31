@@ -34,6 +34,7 @@ public class PostPressService {
         postPressRepository.save(postPress);
     }
 
+
     public void deletePostPressById(Long id) {
         postPressRepository.deleteById(id);
     }
@@ -91,5 +92,11 @@ public class PostPressService {
         return postPressRepository.findAll();
 
     }
+
+    public PostPress findById(Long postPressId) {
+        return postPressRepository.findById(postPressId)
+                .orElseThrow(() -> new IllegalArgumentException("PostPress not found with ID: " + postPressId));
+    }
+
 
 }

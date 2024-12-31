@@ -11,12 +11,9 @@
 
 <div class="container">
     <div class="row align-items-start">
-        <div class="col">
-            One of three columns
-        </div>
-        <div class="col">
+        <div class="col"></div>
 
-
+        <div class="col">
             <!--/*@thymesVar id="account" type="com.springboot.printmastercrm.entity.Account"*/-->
             <form th:action="@{/account/register}" th:object="${account}" method="post">
                 <div class="mb-3">
@@ -47,9 +44,7 @@
                 <button type="submit" class="btn btn-primary mt-3">Зарегистрироваться</button>
             </form>
         </div>
-        <div class="col">
-            One of three columns
-        </div>
+        <div class="col"></div>
     </div>
 </div>
 <th:block th:insert="~{_bootstrap::script}"></th:block>

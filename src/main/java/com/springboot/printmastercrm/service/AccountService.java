@@ -3,6 +3,7 @@ package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.Account;
 import com.springboot.printmastercrm.repository.AccountRepository;
+import com.springboot.printmastercrm.repository.CustomerRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,6 +23,8 @@ public class AccountService implements UserDetailsService {
 
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private CustomerRepository customerRepository;
 
     @PreAuthorize("hasRole('ROLE_MANAGER')")
     public void save(Account account) {
@@ -48,16 +51,16 @@ public class AccountService implements UserDetailsService {
         throw new UsernameNotFoundException(username);
     }
 
+    @Transactional
     public void deleteManagerById(Long managerId) {
         accountRepository.deleteById(managerId);
+        customerRepository.deleteById(managerId);
+
     }
 
     public List<Account> findById(Long Id) {
         return accountRepository.findAll();
     }
 
-//    public Optional<Account> findById(Long id) {
-//        return accountRepository.findById(id);
-//    }
 
 }

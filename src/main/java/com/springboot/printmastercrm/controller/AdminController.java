@@ -71,6 +71,34 @@ public class AdminController {
         return "redirect:/admin/settings";
     }
 
+    @PostMapping("/settings/action")
+    public String handleAction(
+            @RequestParam("postPressId") Long postPressId,
+            @RequestParam String action,
+            @RequestParam(required = false) Long customerId) {
+
+        switch (action) {
+            case "delete":
+                // Удаление PostPress
+                postPressService.deletePostPressById(postPressId);
+                break;
+            case "transfer":
+                // Передача PostPress другому заказчику
+                if (customerId == null) {
+                    throw new IllegalArgumentException("Customer ID is required for transfer action.");
+                }
+                PostPress postPress = postPressService.findById(postPressId);
+                Customer customer = customerService.findById(customerId);
+                postPress.setCustomer(customer);
+                postPressService.save(postPress);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown action: " + action);
+        }
+
+        return "redirect:/admin/settings";
+    }
+
     @PostMapping("/settings/deleteManager")
     public String deleteManager(@RequestParam("id") Long managerId) {
         accountService.deleteManagerById(managerId);
