@@ -21,6 +21,10 @@ public class PostPress {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
+    @ManyToOne
+    @JoinColumn(name = "manager_id") // Связь с таблицей Account
+    private Account manager; // Поле для назначения менеджера
+
     private int quantity;
     private double widthSM;
     private double lengthSM;

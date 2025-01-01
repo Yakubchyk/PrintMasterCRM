@@ -36,6 +36,9 @@ public class PostPressService {
 
 
     public void deletePostPressById(Long id) {
+        if (!postPressRepository.existsById(id)) {
+            throw new IllegalArgumentException("PostPress not found with ID: " + id);
+        }
         postPressRepository.deleteById(id);
     }
 

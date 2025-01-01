@@ -115,32 +115,45 @@
                             <td th:text="${postpress.customer.username}"></td>
                             <td th:text="${postpress.quantity}"></td>
                             <td th:text="${postpress.totalPrice}"></td>
+                            <td th:text="${postpress.customer.managerUsername}"></td>
 
-                            <!-- Форма для назначения нового менеджера -->
-                            <td>
-                                <form th:action="@{/admin/settings/assign-manager}" method="post">
-                                    <input type="hidden" name="postPressId" th:value="${postpress.id}">
-                                    <select class="form-select" name="managerId" required>
-                                        <option value="" disabled selected>Выбрать менеджера</option>
-                                        <option th:each="manager : ${managers}"
-                                                th:value="${manager.id}"
-                                                th:text="${manager.username}"></option>
-                                    </select>
-                                    <button type="submit" class="btn btn-primary mt-1">Назначить</button>
-                                </form>
-                            </td>
+<!--                            &lt;!&ndash; Форма для назначения нового менеджера &ndash;&gt;-->
+<!--                            <td>-->
+<!--                                <form th:action="@{/admin/settings/assign-manager}" method="post">-->
+<!--                                    <input type="hidden" name="postPressId" th:value="${postpress.id}">-->
+<!--                                    <select class="form-select" name="managerId" required>-->
+<!--                                        <option value="" disabled selected>Выбрать менеджера</option>-->
+<!--                                        <option th:each="manager : ${managers}"-->
+<!--                                                th:value="${manager.id}"-->
+<!--                                                th:text="${manager.username}"></option>-->
+<!--                                    </select>-->
+<!--                                    <button type="submit" class="btn btn-primary mt-1">Назначить</button>-->
+<!--                                </form>-->
+<!--                            </td>-->
 
                             <!-- Действия -->
+
                             <td>
                                 <form th:action="@{/admin/settings/action}" method="post">
+                                    <!-- Скрытое поле для ID PostPress -->
                                     <input type="hidden" name="postPressId" th:value="${postpress.id}">
+
+                                    <!-- Выбор действия -->
                                     <select class="form-select" name="action" required>
                                         <option value="" disabled selected>Выбрать действие</option>
                                         <option value="delete">Удалить</option>
                                         <option value="transfer">Передать</option>
                                     </select>
-                                    <!-- Поле для ввода ID заказчика (появляется при выборе "transfer") -->
-                                    <input type="number" name="customerId" placeholder="ID заказчика" class="form-control mt-1">
+
+                                    <!-- Выбор менеджера (только если "Передать") -->
+                                    <select class="form-select mt-1" name="managerId">
+                                        <option value="" disabled selected>Выбрать менеджера</option>
+                                        <option th:each="account : ${accountList}"
+                                                th:value="${account.id}"
+                                        th:text="${account.username}"></option>
+                                    </select>
+
+                                    <!-- Кнопка отправки -->
                                     <button type="submit" class="btn btn-success mt-1">Ок</button>
                                 </form>
                             </td>

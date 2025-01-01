@@ -58,7 +58,11 @@ public class AccountService implements UserDetailsService {
 
     }
 
-    public List<Account> findById(Long Id) {
+    public Optional<Account> findById(Long id) {
+        return accountRepository.findById(id); // Стандартный метод JpaRepository
+    }
+
+    public List<Account> findAll(Long id) {
         return accountRepository.findAll();
     }
 
