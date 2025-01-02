@@ -139,24 +139,39 @@
                                     <input type="hidden" name="postPressId" th:value="${postpress.id}">
 
                                     <!-- Выбор действия -->
-                                    <select class="form-select" name="action" required>
+                                    <select class="form-select" name="action" id="action-select" required onchange="toggleManagerSelect()">
                                         <option value="" disabled selected>Выбрать действие</option>
                                         <option value="delete">Удалить</option>
                                         <option value="transfer">Передать</option>
                                     </select>
 
                                     <!-- Выбор менеджера (только если "Передать") -->
-                                    <select class="form-select mt-1" name="managerId">
-                                        <option value="" disabled selected>Выбрать менеджера</option>
-                                        <option th:each="account : ${accountList}"
-                                                th:value="${account.id}"
-                                        th:text="${account.username}"></option>
-                                    </select>
+                                    <div id="manager-select-container" style="display: none;">
+                                        <select class="form-select mt-1" name="managerId">
+                                            <option value="" disabled selected>Выбрать менеджера</option>
+                                            <option th:each="account : ${accountList}"
+                                                    th:value="${account.id}"
+                                                    th:text="${account.username}"></option>
+                                        </select>
+                                    </div>
 
                                     <!-- Кнопка отправки -->
                                     <button type="submit" class="btn btn-success mt-1">Ок</button>
                                 </form>
                             </td>
+
+                            <script>
+                                function toggleManagerSelect() {
+                                    const actionSelect = document.getElementById('action-select');
+                                    const managerSelectContainer = document.getElementById('manager-select-container');
+
+                                    if (actionSelect.value === 'transfer') {
+                                        managerSelectContainer.style.display = 'block';
+                                    } else {
+                                        managerSelectContainer.style.display = 'none';
+                                    }
+                                }
+                            </script>
                         </tr>
                         </tbody>
                     </table>
