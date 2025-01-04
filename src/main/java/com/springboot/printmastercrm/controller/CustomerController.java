@@ -105,6 +105,7 @@ public class CustomerController {
         if (postPress == null) {
             throw new RuntimeException("PostPress not found for Customer ID: " + customerId);
         }
+        List<Printing> printing = printingService.findByCustomerId(customerId);
 
         Customer customer = customerService.findById(customerId);
         if (customer == null) {
@@ -117,6 +118,7 @@ public class CustomerController {
         model.addAttribute("order", order);
         model.addAttribute("customer", customer);
         model.addAttribute("postPress", postPress);
+        model.addAttribute("printing", printing);
 
         return "order";
     }

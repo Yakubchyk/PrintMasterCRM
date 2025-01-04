@@ -101,26 +101,25 @@ public class AdminController {
             @RequestParam(required = false) Long managerId) {
 
         PostPress postPress = postPressService.findById(postPressId);
-        if (postPress == null) {
-            throw new IllegalArgumentException("PostPress not found with ID: " + postPressId);
-        }
+        System.out.println("Action: " + action + ", PostPress ID: " + postPressId);
 
         switch (action) {
             case "delete":
-                // Удаление PostPress
+                System.out.println("Deleting PostPress with ID: " + postPressId);
                 postPressService.deletePostPressById(postPressId);
                 break;
 
             case "transfer":
-                // Передача PostPress другому менеджеру
                 if (managerId == null) {
                     throw new IllegalArgumentException("Manager ID is required for transfer action.");
                 }
                 Account manager = accountService.findById(managerId)
                         .orElseThrow(() -> new IllegalArgumentException("Manager not found with ID: " + managerId));
 
-                postPress.setManager(manager); // Назначаем менеджера
+                System.out.println("Transferring PostPress with ID: " + postPressId + " to Manager ID: " + managerId);
+                postPress.setManager(manager);
                 postPressService.save(postPress);
+                System.out.println("PostPress transferred successfully.");
                 break;
 
             default:
