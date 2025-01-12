@@ -18,105 +18,12 @@
 <div class="container-fluid mt-2">
     <div class="row align-items-start">
 
-        <div class="col-2">
-            <h6>Меню</h6>
-
-
-            <nav class="nav flex-column">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                        Новый клиент
-                    </a>
-                    <ul class="dropdown-menu p-3" style="width: 300px;">
-                        <form th:action="@{/profile/register}" th:object="${customer}" method="post">
-                            <div class="mb-3">
-                                <label for="exampleInputName1" class="form-label">Название организации</label>
-                                <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}" placeholder="Название">
-                            </div>
-                            <div class="mb-3">
-                                <label for="exampleInputUsername1" class="form-label">Телефон</label>
-                                <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}" placeholder="Телефон">
-                            </div>
-                            <div class="mb-3">
-                                <label for="exampleInputPassword1" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}" placeholder="e-mail">
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Создать</button>
-                        </form>
-                    </ul>
-                </li>
-
-                <!-- Расчет тиснения -->
-                <div th:if="${selectedCustomer != null}">
-                    <a class="nav-link" th:href="@{/profile/postpress(customerId=${selectedCustomer.id})}">
-                        Расчет тиснения
-                    </a>
-                </div>
-
-                <!-- Расчет печати -->
-                <div th:if="${selectedCustomer != null}">
-                    <a class="nav-link" th:href="@{/profile/printing(customerId=${selectedCustomer.id})}">
-                        Расчет печати
-                    </a>
-                </div>
-
-                <!-- Создать предложение -->
-                <div th:if="${selectedCustomer != null}">
-                    <a class="nav-link" th:href="@{/profile/order(customerId=${selectedCustomer.id})}">
-                        Создать предложение
-                    </a>
-                </div>
-            </nav>
+        <div class="col-3">
+            <header th:insert="~{_headet_links.html}"></header>
         </div>
 
 
-
-<!--            <div class="dropdown" style="border: 2px solid #40a387; border-radius: 10px; padding: 15px;">-->
-<!--                <button type="button" class="btn btn-light" data-bs-toggle="dropdown" aria-expanded="false"-->
-<!--                        data-bs-auto-close="outside">-->
-<!--                    Новый клиент-->
-<!--                </button>-->
-<!--                <form class="dropdown-menu p-4" th:action="@{/profile/register}" th:object="${customer}" method="post">-->
-<!--                    <div class="mb-3">-->
-<!--                        <label for="exampleInputName1" class="form-label">Название организации</label>-->
-<!--                        <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}"-->
-<!--                               placeholder="Название">-->
-<!--                    </div>-->
-<!--                    <div class="mb-3">-->
-<!--                        <label for="exampleInputUsername1" class="form-label">Телефон</label>-->
-<!--                        <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}"-->
-<!--                               placeholder="Телефон">-->
-<!--                    </div>-->
-<!--                    <div class="mb-3">-->
-<!--                        <label for="exampleInputPassword1" class="form-label">Email</label>-->
-<!--                        <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}"-->
-<!--                               placeholder="e-mail">-->
-<!--                    </div>-->
-<!--                    <button type="submit" class="btn btn-light">Создать</button>-->
-<!--                </form>-->
-
-<!--                <div th:if="${selectedCustomer != null}">-->
-<!--                    <form th:action="@{/profile/postpress}" method="get">-->
-<!--                        <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">-->
-<!--                        <button type="submit" class="btn btn-light">Расчет тиснения</button>-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--                <div th:if="${selectedCustomer != null}">-->
-<!--                    <form th:action="@{/profile/printing}" method="get">-->
-<!--                        <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">-->
-<!--                        <button class="btn btn-light">Расчет печати</button>-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--                <div th:if="${selectedCustomer != null}">-->
-<!--                    <form th:action="@{/profile/order}" method="get">-->
-<!--                        <input type="hidden" name="customerId" th:value="${selectedCustomer.id}">-->
-<!--                        <button type="submit" class="btn btn-light">Создать предложение</button>-->
-<!--                    </form>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-
-        <div class="col-6">
+        <div class="col-9">
             <h6>Список клиентов</h6>
             <table class="table table-success table-striped">
                 <tbody>
@@ -127,7 +34,11 @@
                     <td th:text="${customer.phoneNumber}">Телефон</td>
                     <td th:text="${customer.email}">Email клиента</td>
                     <td>
-                        <!-- Кнопка отображается только если клиент совпадает с выбранным -->
+                        <div th:if="${selectedCustomer != null and selectedCustomer.id == customer.id}">
+                            <a th:href="@{/profile/orders/{id}(id=${customer.id})}">Заказы</a>
+                        </div>
+                    </td>
+                    <td>
                         <div th:if="${selectedCustomer != null and selectedCustomer.id == customer.id}">
                             <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal"
                                     data-bs-target="#staticBackdrop">
@@ -135,6 +46,7 @@
                             </button>
                         </div>
                     </td>
+
                 </tr>
                 </tbody>
             </table>
@@ -156,16 +68,20 @@
                                 <input type="hidden" th:field="*{id}">
                                 <div class="mb-3">
                                     <label class="form-label">Название организации</label>
-                                    <input type="text" class="form-control" th:field="*{username}" placeholder="Название организации">
+                                    <input type="text" class="form-control" th:field="*{username}"
+                                           placeholder="Название организации">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Телефон</label>
-                                    <input type="text" class="form-control" th:field="*{phoneNumber}" placeholder="Телефон">
+                                    <input type="text" class="form-control" th:field="*{phoneNumber}"
+                                           placeholder="Телефон">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Email</label>
                                     <input type="email" class="form-control" th:field="*{email}" placeholder="Email">
                                 </div>
+                                <input type="hidden" th:field="*{managerUsername}">
+                                <input type="hidden" th:field="*{account.id}">
                                 <button type="submit" class="btn btn-success">Сохранить изменения</button>
                             </form>
                         </div>
@@ -177,49 +93,6 @@
             </div>
         </div>
 
-
-        <div class="col-3">
-            <div th:if="${selectedCustomer != null}">
-                <h6>Расчеты тиснения</h6>
-                <table class="table table-success table-striped">
-                    <thead>
-                    <tr>
-                        <th>Тираж</th>
-                        <th>Стоимость</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="postpress : ${postPressList}">
-                        <td th:text="${postpress.quantity}"></td>
-                        <td th:text="${postpress.totalPrice}"></td>
-                    </tr>
-                    </tbody>
-                </table>
-
-                <h6>Расчеты печати</h6>
-                <table class="table table-success table-striped">
-                    <thead>
-                    <tr>
-                        <th>Бумага</th>
-                        <th>Цветность</th>
-                        <th>Тираж</th>
-                        <th>Стоимость</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="printing : ${printingList}">
-                        <td th:text="${printing.papier}"></td>
-                        <td th:text="${printing.colour}"></td>
-                        <td th:text="${printing.quantity}"></td>
-                        <td th:text="${printing.totalCost}"></td>
-                    </tr>
-                    </tbody>
-                </table>
-
-                <div th:if="${selectedCustomer == null}"></div>
-
-            </div>
-        </div>
     </div>
 </div>
 

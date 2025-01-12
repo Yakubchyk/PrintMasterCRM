@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head th:insert="~{_bootstrap::link}">
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+
+<body>
+<header th:insert="~{_header.html}"></header>
+
+<div class="container-fluid mt-2">
+    <div class="row align-items-start">
+
+        <div class="col-3">
+            <h6>Меню</h6>
+        </div>
+
+
+        <div class="col-5">
+            <h6>Новый клиент</h6>
+
+            <form th:action="@{/profile/register}" th:object="${customer}" method="post">
+                <div class="mb-3">
+                    <label for="exampleInputName1" class="form-label">Название организации</label>
+                    <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}"
+                           placeholder="Название">
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputUsername1" class="form-label">Телефон</label>
+                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}"
+                           placeholder="Телефон">
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputPassword1" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}"
+                           placeholder="e-mail">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Создать</button>
+            </form>
+        </div>
+        <div class="col-3"></div>
+
+
+        <th:block th:insert="~{_bootstrap::script}"></th:block>
+    </div>
+</div>
+</body>
+</html>

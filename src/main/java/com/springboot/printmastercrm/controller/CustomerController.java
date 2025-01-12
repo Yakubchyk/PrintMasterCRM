@@ -46,6 +46,12 @@ public class CustomerController {
         return "profile";
     }
 
+    @GetMapping("/customer")
+    public String newCustomer(Model model) {
+        model.addAttribute("customer", new Customer());
+        return "customer";
+    }
+
 
     @PostMapping("/postpress")
     public String saveCalculation(@ModelAttribute PostPress postPress, @RequestParam Long customerId) {

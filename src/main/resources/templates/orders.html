@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Заказы клиента</title>
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+<header th:insert="~{_header.html}"></header>
+
+<div class="container-fluid mt-2">
+    <div class="row align-items-start">
+
+        <div class="col-3">
+            <header th:insert="~{_headet_links.html}"></header>
+        </div>
+
+        <div class="col-9">
+            <div th:if="${selectedCustomer != null}">
+                <h4>Клиент: <span th:text="${selectedCustomer.username}"></span></h4>
+                <p>Телефон: <span th:text="${selectedCustomer.phoneNumber}"></span></p>
+                <p>Email: <span th:text="${selectedCustomer.email}"></span></p>
+
+                <h6>Расчеты тиснения</h6>
+                <table class="table table-success table-striped">
+                    <thead>
+                    <tr>
+                        <th>Тираж</th>
+                        <th>Стоимость</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="postpress : ${postPressList}">
+                        <td th:text="${postpress.quantity}"></td>
+                        <td th:text="${postpress.totalPrice}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <h6>Расчеты печати</h6>
+                <table class="table table-success table-striped">
+                    <thead>
+                    <tr>
+                        <th>Бумага</th>
+                        <th>Цветность</th>
+                        <th>Тираж</th>
+                        <th>Стоимость</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="printing : ${printingList}">
+                        <td th:text="${printing.papier}"></td>
+                        <td th:text="${printing.colour}"></td>
+                        <td th:text="${printing.quantity}"></td>
+                        <td th:text="${printing.totalCost}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <a class="nav-link" href="/profile">Закрыть</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

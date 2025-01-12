@@ -22,6 +22,7 @@
                     <th>Действия</th>
                 </tr>
                 </thead>
+
                 <tbody>
                 <!--/*@thymesVar id="account" type="com.springboot.printmastercrm.entity.Account"*/-->
                 <tr th:each="account : ${accountList}">
@@ -75,7 +76,8 @@
                     <table class="table table-success table-striped">
                         <thead>
                         <tr>
-                            <th>Манагер</th>
+
+                            <th>Менеджер</th>
                             <th>Имя клиента</th>
                             <th>Действия</th>
                         </tr>
@@ -85,6 +87,29 @@
                             <td th:text="${customer.managerUsername}"></td>
                             <td th:text="${customer.username}"></td>
                             <td>
+                                <form th:action="@{/admin/settings/action}" method="post">
+                                    <input type="hidden" name="customerId" th:value="${customer.id}">
+
+                                    <select class="form-select" name="action" id="action-select" required onchange="toggleManagerSelect()">
+                                        <option value="" disabled selected>Выбрать действие</option>
+                                        <option value="delete">Удалить</option>
+                                        <option value="transfer">Передать</option>
+                                    </select>
+
+                                    <!-- Выбор менеджера (только если "Передать") -->
+                                    <div id="manager-select-container" style="display: none;">
+                                        <select class="form-select mt-1" name="managerId">
+                                            <option value="" disabled selected>Выбрать менеджера</option>
+                                            <option th:each="account : ${accountList}"
+                                                    th:value="${account.id}"
+                                                    th:text="${account.username}"></option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Кнопка отправки -->
+                                    <button type="submit" class="btn btn-success mt-1">Ок</button>
+                                </form>
+
                                 <form th:action="@{/admin/settings/deleteCustomer}" method="post">
                                     <input type="hidden" name="id" th:value="${customer.id}">
                                     <button type="submit" class="btn btn-danger">Удалить</button>
@@ -94,6 +119,22 @@
                         </tbody>
                     </table>
                 </div>
+
+
+                        <script>
+                            function toggleManagerSelect() {
+                                const actionSelect = document.getElementById('action-select');
+                                const managerSelectContainer = document.getElementById('manager-select-container');
+
+                                if (actionSelect.value === 'transfer') {
+                                    managerSelectContainer.style.display = 'block';
+                                } else {
+                                    managerSelectContainer.style.display = 'none';
+                                }
+                            }
+                        </script>
+
+
 
                 <div class="col">
                     <h3>Заказы клиентов</h3>
@@ -117,61 +158,45 @@
                             <td th:text="${postpress.totalPrice}"></td>
                             <td th:text="${postpress.customer.managerUsername}"></td>
 
-<!--                            &lt;!&ndash; Форма для назначения нового менеджера &ndash;&gt;-->
-<!--                            <td>-->
-<!--                                <form th:action="@{/admin/settings/assign-manager}" method="post">-->
-<!--                                    <input type="hidden" name="postPressId" th:value="${postpress.id}">-->
-<!--                                    <select class="form-select" name="managerId" required>-->
-<!--                                        <option value="" disabled selected>Выбрать менеджера</option>-->
-<!--                                        <option th:each="manager : ${managers}"-->
-<!--                                                th:value="${manager.id}"-->
-<!--                                                th:text="${manager.username}"></option>-->
-<!--                                    </select>-->
-<!--                                    <button type="submit" class="btn btn-primary mt-1">Назначить</button>-->
-<!--                                </form>-->
-<!--                            </td>-->
-
-                            <!-- Действия -->
-
                             <td>
-                                <form th:action="@{/admin/settings/action}" method="post">
-                                    <!-- Скрытое поле для ID PostPress -->
-                                    <input type="hidden" name="postPressId" th:value="${postpress.id}">
+<!--                                <form th:action="@{/admin/settings/action}" method="post">-->
+<!--                                    &lt;!&ndash; Скрытое поле для ID PostPress &ndash;&gt;-->
+<!--                                    <input type="hidden" name="postPressId" th:value="${postpress.id}">-->
 
-                                    <!-- Выбор действия -->
-                                    <select class="form-select" name="action" id="action-select" required onchange="toggleManagerSelect()">
-                                        <option value="" disabled selected>Выбрать действие</option>
-                                        <option value="delete">Удалить</option>
-                                        <option value="transfer">Передать</option>
-                                    </select>
+<!--                                    &lt;!&ndash; Выбор действия &ndash;&gt;-->
+<!--                                    <select class="form-select" name="action" id="action-select" required onchange="toggleManagerSelect()">-->
+<!--                                        <option value="" disabled selected>Выбрать действие</option>-->
+<!--                                        <option value="delete">Удалить</option>-->
+<!--                                        <option value="transfer">Передать</option>-->
+<!--                                    </select>-->
 
-                                    <!-- Выбор менеджера (только если "Передать") -->
-                                    <div id="manager-select-container" style="display: none;">
-                                        <select class="form-select mt-1" name="managerId">
-                                            <option value="" disabled selected>Выбрать менеджера</option>
-                                            <option th:each="account : ${accountList}"
-                                                    th:value="${account.id}"
-                                                    th:text="${account.username}"></option>
-                                        </select>
-                                    </div>
+<!--                                    &lt;!&ndash; Выбор менеджера (только если "Передать") &ndash;&gt;-->
+<!--                                    <div id="manager-select-container" style="display: none;">-->
+<!--                                        <select class="form-select mt-1" name="managerId">-->
+<!--                                            <option value="" disabled selected>Выбрать менеджера</option>-->
+<!--                                            <option th:each="account : ${accountList}"-->
+<!--                                                    th:value="${account.id}"-->
+<!--                                                    th:text="${account.username}"></option>-->
+<!--                                        </select>-->
+<!--                                    </div>-->
 
-                                    <!-- Кнопка отправки -->
-                                    <button type="submit" class="btn btn-success mt-1">Ок</button>
-                                </form>
+<!--                                    &lt;!&ndash; Кнопка отправки &ndash;&gt;-->
+<!--                                    <button type="submit" class="btn btn-success mt-1">Ок</button>-->
+<!--                                </form>-->
                             </td>
 
-                            <script>
-                                function toggleManagerSelect() {
-                                    const actionSelect = document.getElementById('action-select');
-                                    const managerSelectContainer = document.getElementById('manager-select-container');
+<!--                            <script>-->
+<!--                                function toggleManagerSelect() {-->
+<!--                                    const actionSelect = document.getElementById('action-select');-->
+<!--                                    const managerSelectContainer = document.getElementById('manager-select-container');-->
 
-                                    if (actionSelect.value === 'transfer') {
-                                        managerSelectContainer.style.display = 'block';
-                                    } else {
-                                        managerSelectContainer.style.display = 'none';
-                                    }
-                                }
-                            </script>
+<!--                                    if (actionSelect.value === 'transfer') {-->
+<!--                                        managerSelectContainer.style.display = 'block';-->
+<!--                                    } else {-->
+<!--                                        managerSelectContainer.style.display = 'none';-->
+<!--                                    }-->
+<!--                                }-->
+<!--                            </script>-->
                         </tr>
                         </tbody>
                     </table>

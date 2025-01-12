@@ -1,0 +1,30 @@
+<h6>Меню</h6>
+
+
+<nav class="nav flex-column">
+
+    <a class="nav-link" th:href="@{/profile/customer}">
+        Новый клиент
+    </a>
+
+    <!-- Расчет тиснения -->
+    <div th:if="${selectedCustomer != null}">
+        <a class="nav-link" th:href="@{/profile/postpress(customerId=${selectedCustomer.id})}">
+            Расчет тиснения
+        </a>
+    </div>
+
+    <!-- Расчет печати -->
+    <div th:if="${selectedCustomer != null}">
+        <a class="nav-link" th:href="@{/profile/printing(customerId=${selectedCustomer.id})}">
+            Расчет печати
+        </a>
+    </div>
+
+    <!-- Создать предложение -->
+    <div th:if="${selectedCustomer != null}">
+        <a class="nav-link" th:href="@{/profile/order(customerId=${selectedCustomer.id})}">
+            Создать предложение
+        </a>
+    </div>
+</nav>

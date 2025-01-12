@@ -48,9 +48,8 @@ public class AdminController {
         } else {
             printingList = printingService.findAll();
         }
-        List<Account> accountList;
-        accountList = accountService.findAll(customerId);
 
+        List<Account> accountList = accountService.findAll(customerId);
 
         model.addAttribute("postPressList", postPressList);
         model.addAttribute("printingList", printingList);
@@ -70,56 +69,32 @@ public class AdminController {
         return "redirect:/admin/settings";
     }
 
-//    @PostMapping("/settings/assign-manager")
-//    public String assignManager(
-//            @RequestParam("postPressId") Long postPressId,
-//            @RequestParam("managerId") Long managerId) {
-//
-//        // Получение PostPress
-//        PostPress postPress = postPressService.findById(postPressId);
-//        if (postPress == null) {
-//            throw new IllegalArgumentException("PostPress not found with ID: " + postPressId);
-//        }
-//
-//        // Получение Manager (Account)
-//        List<Account> manager = accountService.findById(managerId);
-//        if (manager == null) {
-//            throw new IllegalArgumentException("Manager not found or is not a valid manager.");
-//        }
-//
-//        // Назначение менеджера
-//        postPress.setId(managerId);
-//        postPressService.save(postPress);
-//
-//        return "redirect:/admin/settings";
-//    }
 
     @PostMapping("/settings/action")
     public String handleAction(
-            @RequestParam("postPressId") Long postPressId,
+            @RequestParam("customerId") Long postPressId,
             @RequestParam String action,
             @RequestParam(required = false) Long managerId) {
 
-        PostPress postPress = postPressService.findById(postPressId);
-        System.out.println("Action: " + action + ", PostPress ID: " + postPressId);
+//        PostPress postPress = postPressService.findById(postPressId);
+//        System.out.println("Action: " + action + ", PostPress ID: " + postPressId);
+
+        Customer customer = customerService.findById(managerId);
 
         switch (action) {
             case "delete":
-                System.out.println("Deleting PostPress with ID: " + postPressId);
-                postPressService.deletePostPressById(postPressId);
+
+                customerService.deleteCustomer(managerId);
                 break;
 
             case "transfer":
                 if (managerId == null) {
                     throw new IllegalArgumentException("Manager ID is required for transfer action.");
                 }
-                Account manager = accountService.findById(managerId)
-                        .orElseThrow(() -> new IllegalArgumentException("Manager not found with ID: " + managerId));
+                
+                customer.setManagerUsername(customer.getUsername());
+                customerService.createCustomerForManager(customer, customer.getManagerUsername());
 
-                System.out.println("Transferring PostPress with ID: " + postPressId + " to Manager ID: " + managerId);
-                postPress.setManager(manager);
-                postPressService.save(postPress);
-                System.out.println("PostPress transferred successfully.");
                 break;
 
             default:

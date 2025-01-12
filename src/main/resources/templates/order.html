@@ -50,7 +50,10 @@
                               placeholder="Детали заказа"></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Создать предложение</button>
+                <form th:action="@{/html/save}" method="post">
+                    <button type="submit" class="btn btn-primary">Сохранить HTML</button>
+                </form>
+
             </form>
         </div>
         <div class="col-3"></div>
