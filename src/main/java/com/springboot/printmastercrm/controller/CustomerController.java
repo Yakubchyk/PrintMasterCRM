@@ -93,7 +93,7 @@ public class CustomerController {
 
     @PostMapping("/update")
     public String updateCustomer(@ModelAttribute("selectedCustomer") Customer updatedCustomer) {
-        customerService.updateCustomer(updatedCustomer.getId(), updatedCustomer);
+        customerService.updateCustomer(updatedCustomer);
         return "redirect:/profile?id=" + updatedCustomer.getId();
     }
 

@@ -69,32 +69,22 @@ public class AdminController {
         return "redirect:/admin/settings";
     }
 
-
     @PostMapping("/settings/action")
     public String handleAction(
-            @RequestParam("customerId") Long postPressId,
+            @RequestParam("customerId") Long customerId,
             @RequestParam String action,
             @RequestParam(required = false) Long managerId) {
 
-//        PostPress postPress = postPressService.findById(postPressId);
-//        System.out.println("Action: " + action + ", PostPress ID: " + postPressId);
-
-        Customer customer = customerService.findById(managerId);
-
         switch (action) {
             case "delete":
-
-                customerService.deleteCustomer(managerId);
+                customerService.deleteCustomer(customerId);
                 break;
 
             case "transfer":
                 if (managerId == null) {
                     throw new IllegalArgumentException("Manager ID is required for transfer action.");
                 }
-                
-                customer.setManagerUsername(customer.getUsername());
-                customerService.createCustomerForManager(customer, customer.getManagerUsername());
-
+                customerService.transferCustomerToManager(customerId, managerId);
                 break;
 
             default:
@@ -103,6 +93,40 @@ public class AdminController {
 
         return "redirect:/admin/settings";
     }
+
+//    @PostMapping("/settings/action")
+//    public String handleAction(
+//            @RequestParam("customerId") Long postPressId,
+//            @RequestParam String action,
+//            @RequestParam(required = false) Long managerId) {
+//
+////        PostPress postPress = postPressService.findById(postPressId);
+////        System.out.println("Action: " + action + ", PostPress ID: " + postPressId);
+//
+//        Customer customer = customerService.findById(managerId);
+//
+//        switch (action) {
+//            case "delete":
+//
+//                customerService.deleteCustomer(managerId);
+//                break;
+//
+//            case "transfer":
+//                if (managerId == null) {
+//                    throw new IllegalArgumentException("Manager ID is required for transfer action.");
+//                }
+//
+//                customer.setManagerUsername(customer.getUsername());
+//                customerService.createCustomerForManager(customer, customer.getManagerUsername());
+//
+//                break;
+//
+//            default:
+//                throw new IllegalArgumentException("Unknown action: " + action);
+//        }
+//
+//        return "redirect:/admin/settings";
+//    }
 
     @PostMapping("/settings/deleteManager")
     public String deleteManager(@RequestParam("id") Long managerId) {

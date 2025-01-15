@@ -2,10 +2,8 @@ package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.Account;
 import com.springboot.printmastercrm.entity.Customer;
-import com.springboot.printmastercrm.repository.AccountRepository;
-import com.springboot.printmastercrm.repository.CustomerRepository;
-import com.springboot.printmastercrm.repository.PostPressRepository;
-import com.springboot.printmastercrm.repository.PrintingRepository;
+import com.springboot.printmastercrm.entity.Order;
+import com.springboot.printmastercrm.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,19 +20,25 @@ public class CustomerService implements UserDetailsService {
 
     @Autowired
     private CustomerRepository customerRepository;
+
     @Autowired
     private AccountRepository accountRepository;
-    @Autowired
-    private PostPressService postPressService;
+
     @Autowired
     private PostPressRepository postPressRepository;
+
     @Autowired
     private PrintingRepository printingRepository;
 
+    @Autowired
+    private OrderRepository orderRepository;
+
+    // Получение клиентов по менеджеру
     public List<Customer> getCustomersByManager(String managerUsername) {
         return customerRepository.findByManagerUsername(managerUsername);
     }
 
+    // Создание клиента для менеджера
     public Customer createCustomerForManager(Customer customer, String managerUsername) {
         customer.setManagerUsername(managerUsername);
         Account managerAccount = accountRepository.findByUsername(managerUsername)
@@ -43,34 +47,75 @@ public class CustomerService implements UserDetailsService {
         return customerRepository.save(customer);
     }
 
+    // Поиск клиента по ID
     public Customer findById(Long id) {
         return customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Customer not found"));
     }
 
-    public Customer updateCustomer(Long id, Customer updatedCustomer) {
-        Customer existingCustomer = customerRepository.findById(id)
+    public Customer updateCustomer(Customer updatedCustomer) {
+        // Поиск существующего клиента
+        Customer existingCustomer = customerRepository.findById(updatedCustomer.getId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
+        // Обновление полей клиента
+        existingCustomer.setUsername(updatedCustomer.getUsername());
+        existingCustomer.setPhoneNumber(updatedCustomer.getPhoneNumber());
+        existingCustomer.setEmail(updatedCustomer.getEmail());
+        existingCustomer.setManagerUsername(updatedCustomer.getManagerUsername());
         existingCustomer.setAccount(updatedCustomer.getAccount());
-        existingCustomer.setId(updatedCustomer.getId());
 
-        return customerRepository.save(updatedCustomer);
+        // Сохранение обновлённого клиента
+        return customerRepository.save(existingCustomer);
     }
 
-   // public void deleteCustomer(Long id) {
-   //     customerRepository.deleteById(id);
-   // }
+    // Удаление клиента и связанных данных
+    public void deleteCustomer(Long customerId) {
+        // Удаление заказов клиента
+        List<Order> orders = orderRepository.findByCustomerId(customerId);
+        for (Order order : orders) {
+            orderRepository.delete(order);
+        }
 
-    public void deleteCustomer(Long id) {
+//        // Удаление связанных данных (PostPress и Printing)
+//        postPressRepository.deleteAllByCustomerId(customerId);
+//        printingRepository.deleteAllByCustomerId(customerId);
 
-        postPressRepository.deleteById(id);
-        printingRepository.deleteById(id);
-
-        customerRepository.deleteById(id);
-
+        // Удаление клиента
+        customerRepository.deleteById(customerId);
     }
 
+    // Получение всех клиентов
+    public List<Customer> getAllCustomers() {
+        return customerRepository.findAll();
+    }
 
+    // Получение заказов клиента
+    public List<Order> findOrdersByCustomerId(Long customerId) {
+        return orderRepository.findByCustomerId(customerId);
+    }
+
+    // Обновление заказа
+    public void updateOrder(Order order) {
+        orderRepository.save(order);
+    }
+
+    public void transferCustomerToManager(Long customerId, Long newManagerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        Account newManager = accountRepository.findById(newManagerId)
+                .orElseThrow(() -> new RuntimeException("Manager not found"));
+
+        customer.setManagerUsername(newManager.getUsername());
+        customer.setAccount(newManager);
+        customerRepository.save(customer);
+
+        List<Order> orders = orderRepository.findByCustomerId(customerId);
+        for (Order order : orders) {
+            order.setAccount(newManager); // Устанавливаем нового менеджера
+            orderRepository.save(order);
+        }
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -80,9 +125,4 @@ public class CustomerService implements UserDetailsService {
         }
         throw new UsernameNotFoundException(username);
     }
-
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
-    }
-
 }
