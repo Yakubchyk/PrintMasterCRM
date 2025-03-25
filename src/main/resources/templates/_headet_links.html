@@ -7,6 +7,12 @@
         Новый клиент
     </a>
 
+    <div th:if="${selectedCustomer != null}">
+        <a class="nav-link" th:href="@{/profile/new_order(customerId=${selectedCustomer.id})}">
+            Новый заказ
+        </a>
+    </div>
+
     <!-- Расчет тиснения -->
     <div th:if="${selectedCustomer != null}">
         <a class="nav-link" th:href="@{/profile/postpress(customerId=${selectedCustomer.id})}">

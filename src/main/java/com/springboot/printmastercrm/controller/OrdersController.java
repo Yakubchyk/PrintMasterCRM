@@ -46,6 +46,12 @@ public class OrdersController {
         model.addAttribute("printingList", printingList);
 
         // Вернуть имя шаблона
-        return "orders"; // Название вашего Thymeleaf-шаблона
+        return "orders";
     }
+
+    @GetMapping("/new_order")
+    public String showNewOrderPage() {
+        return "new_order";
+    }
+
 }
