@@ -13,6 +13,9 @@ import java.math.BigDecimal;
 @ToString
 @Table(name = "customer_orders")
 public class Order {
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+    
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
