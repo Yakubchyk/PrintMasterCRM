@@ -4,10 +4,13 @@
 <head th:insert="~{_bootstrap::link}">
     <meta charset="UTF-8">
     <title>Home</title>
+    <!-- Вставить в <head> всех страниц -->
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
+
     <div class="container-fluid">
         <a class="navbar-brand" href="/">PostMasterCRM</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
