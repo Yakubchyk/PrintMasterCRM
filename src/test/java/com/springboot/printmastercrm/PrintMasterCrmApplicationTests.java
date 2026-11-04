@@ -5,15 +5,15 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * Полный запуск контекста нужен живой PostgreSQL, поэтому тест выполняется только
- * если задана переменная окружения DB_URL (например, DB_URL=jdbc:postgresql://localhost:5433/postgres).
+ * Полный запуск контекста пишет в рабочую базу в домашней папке, поэтому тест выполняется
+ * только если задана PRINTMASTER_DATA (например, во временную папку):
+ * PRINTMASTER_DATA=/tmp/pm-test ./gradlew test
  */
 @SpringBootTest
-@EnabledIfEnvironmentVariable(named = "DB_URL", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "PRINTMASTER_DATA", matches = ".+")
 class PrintMasterCrmApplicationTests {
 
     @Test
     void contextLoads() {
     }
-
 }

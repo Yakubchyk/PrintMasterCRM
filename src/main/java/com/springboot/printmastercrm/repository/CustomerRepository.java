@@ -2,27 +2,25 @@ package com.springboot.printmastercrm.repository;
 
 import com.springboot.printmastercrm.entity.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
-    List<Customer> findByAccountUsername(String username);
+    List<Customer> findAllByOrderByNameAsc();
 
-    boolean existsByAccountId(Long accountId);
+    List<Customer> findByNameContainingIgnoreCaseOrPhoneNumberContainingIgnoreCaseOrEmailContainingIgnoreCaseOrderByNameAsc(
+            String name, String phone, String email);
 
-    boolean existsByUsername(String username);
+    boolean existsByName(String name);
 
     boolean existsByPhoneNumber(String phoneNumber);
 
     boolean existsByEmail(String email);
 
-    boolean existsByUsernameAndIdNot(String username, Long id);
+    boolean existsByNameAndIdNot(String name, Long id);
 
     boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
 
     boolean existsByEmailAndIdNot(String email, Long id);
-
 }

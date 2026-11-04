@@ -1,52 +1,141 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Новый клиент</title>
-    <th:block th:insert="~{_bootstrap::head-assets}"></th:block>
-</head>
-
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{_layout :: head(${customer.name})}"></head>
 <body>
-<header th:replace="~{_header :: nav}"></header>
+<nav th:replace="~{_layout :: nav('customers')}"></nav>
+<main>
+    <p><a th:href="@{/customers}">← Все клиенты</a></p>
+    <h1 th:text="${customer.name}">Клиент</h1>
+    <div th:replace="~{_layout :: alerts}"></div>
 
-<div class="container-fluid mt-2">
-    <div class="row align-items-start">
-
-        <div class="col-3">
-            <h6>Меню</h6>
-        </div>
-
-
-        <div class="col-5">
-            <h6>Новый клиент</h6>
-            <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}">Ошибка</div>
-
-            <form th:action="@{/profile/register}" th:object="${customer}" method="post">
-                <div class="mb-3">
-                    <label for="exampleInputName1" class="form-label">Название организации</label>
-                    <input type="text" class="form-control" id="exampleInputName1" th:field="*{username}"
-                           placeholder="Название">
-                </div>
-                <div class="mb-3">
-                    <label for="exampleInputUsername1" class="form-label">Телефон</label>
-                    <input type="text" class="form-control" id="exampleInputUsername1" th:field="*{phoneNumber}"
-                           placeholder="Телефон">
-                </div>
-                <div class="mb-3">
-                    <label for="exampleInputPassword1" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="exampleInputPassword1" th:field="*{email}"
-                           placeholder="e-mail">
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Создать</button>
+    <section>
+        <div>Телефон: <b th:text="${customer.phoneNumber}"></b> · Email: <b th:text="${customer.email}"></b></div>
+        <details style="margin-top:10px">
+            <summary>Изменить данные клиента</summary>
+            <form th:action="@{/customers/{id}/update(id=${customer.id})}" method="post" class="row">
+                <div><label>Название организации</label><input type="text" name="name" th:value="${customer.name}" required></div>
+                <div><label>Телефон</label><input type="text" name="phone" th:value="${customer.phoneNumber}" required></div>
+                <div><label>Email</label><input type="email" name="email" th:value="${customer.email}" required></div>
+                <div class="fixed"><button type="submit">Сохранить</button></div>
             </form>
+            <form th:action="@{/customers/{id}/delete(id=${customer.id})}" method="post" style="margin-top:12px"
+                  onsubmit="return confirm('Удалить клиента вместе со всеми его расчётами и заказами?')">
+                <button type="submit" class="danger">Удалить клиента</button>
+            </form>
+        </details>
+    </section>
+
+    <!-- Отметки расчётов в таблицах относятся к форме заказа ниже (атрибут form="orderForm") -->
+
+    <section>
+        <h2>Расчёт тиснения</h2>
+        <form th:action="@{/customers/{id}/postpress(id=${customer.id})}" method="post" class="row">
+            <div><label th:text="'Ширина, ' + ${lu.label}">Ширина</label><input type="number" name="width" step="any" min="0" required></div>
+            <div><label th:text="'Длина, ' + ${lu.label}">Длина</label><input type="number" name="length" step="any" min="0" required></div>
+            <div><label>Тираж</label><input type="number" name="quantity" min="1" step="1" required></div>
+            <div class="fixed"><button type="submit">Рассчитать</button></div>
+        </form>
+        <table th:unless="${#lists.isEmpty(postPressList)}">
+            <thead><tr><th></th><th>Дата</th><th>Размер</th><th class="num">Тираж</th><th class="num">Стоимость</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${postPressList}">
+                <td><input type="checkbox" name="postPressIds" th:value="${p.id}" form="orderForm"></td>
+                <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+                <td th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label}"></td>
+                <td class="num" th:text="${p.quantity}"></td>
+                <td class="num total" th:text="${#numbers.formatDecimal(p.totalPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                <td class="num">
+                    <form class="inline" method="post" th:action="@{/customers/{id}/postpress/{cid}/delete(id=${customer.id}, cid=${p.id})}">
+                        <button type="submit" class="danger small" title="Удалить расчёт">✕</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Расчёт печати</h2>
+        <form th:action="@{/customers/{id}/printing(id=${customer.id})}" method="post" class="row">
+            <div><label>Бумага</label>
+                <select name="papier"><option th:each="p : ${papers}" th:value="${p}" th:text="${p}"></option></select></div>
+            <div><label>Цветность</label>
+                <select name="colour"><option th:each="c : ${colours}" th:value="${c}" th:text="${c}"></option></select></div>
+            <div><label>Тираж</label><input type="number" name="quantity" min="1" step="1" required></div>
+            <div class="fixed"><button type="submit">Рассчитать</button></div>
+        </form>
+        <table th:unless="${#lists.isEmpty(printingList)}">
+            <thead><tr><th></th><th>Дата</th><th>Бумага</th><th>Цветность</th><th class="num">Тираж</th><th class="num">Стоимость</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${printingList}">
+                <td><input type="checkbox" name="printingIds" th:value="${p.id}" form="orderForm"></td>
+                <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+                <td th:text="${p.papier}"></td>
+                <td th:text="${p.colour}"></td>
+                <td class="num" th:text="${p.quantity}"></td>
+                <td class="num total" th:text="${#numbers.formatDecimal(p.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                <td class="num">
+                    <form class="inline" method="post" th:action="@{/customers/{id}/printing/{cid}/delete(id=${customer.id}, cid=${p.id})}">
+                        <button type="submit" class="danger small" title="Удалить расчёт">✕</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Расчёт клише</h2>
+        <form th:action="@{/customers/{id}/cliche(id=${customer.id})}" method="post" class="row">
+            <div><label th:text="'Ширина, ' + ${lu.label}">Ширина</label><input type="number" name="width" step="any" min="0" required></div>
+            <div><label th:text="'Длина, ' + ${lu.label}">Длина</label><input type="number" name="length" step="any" min="0" required></div>
+            <div><label>Количество клише</label><input type="number" name="quantity" min="1" step="1" value="1" required></div>
+            <div class="fixed"><button type="submit">Рассчитать</button></div>
+        </form>
+        <table th:unless="${#lists.isEmpty(clicheList)}">
+            <thead><tr><th></th><th>Дата</th><th>Размер</th><th class="num">Кол-во</th><th class="num">Стоимость</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${clicheList}">
+                <td><input type="checkbox" name="clicheIds" th:value="${p.id}" form="orderForm"></td>
+                <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+                <td th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label}"></td>
+                <td class="num" th:text="${p.quantity}"></td>
+                <td class="num total" th:text="${#numbers.formatDecimal(p.totalPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                <td class="num">
+                    <form class="inline" method="post" th:action="@{/customers/{id}/cliche/{cid}/delete(id=${customer.id}, cid=${p.id})}">
+                        <button type="submit" class="danger small" title="Удалить расчёт">✕</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Оформить заказ</h2>
+        <p class="muted" style="margin-top:0">Отметьте галочками расчёты выше, которые входят в заказ.</p>
+        <form id="orderForm" th:action="@{/customers/{id}/orders(id=${customer.id})}" method="post">
+            <label for="product">Детали заказа</label>
+            <textarea id="product" name="product" required maxlength="255"></textarea>
+            <p><button type="submit">Оформить заказ</button></p>
+        </form>
+
+        <div th:unless="${#lists.isEmpty(orders)}">
+            <h2 style="margin-top:20px">Заказы клиента</h2>
+            <table>
+                <thead><tr><th>№</th><th>Дата</th><th>Описание</th><th class="num">Сумма</th><th>Статус</th></tr></thead>
+                <tbody>
+                <tr th:each="o : ${orders}">
+                    <td th:text="${o.id}"></td>
+                    <td th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></td>
+                    <td th:text="${o.product}"></td>
+                    <td class="num total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                    <td th:text="${o.status.label}"></td>
+                </tr>
+                </tbody>
+            </table>
         </div>
-        <div class="col-3"></div>
-
-
-        <th:block th:insert="~{_bootstrap::scripts}"></th:block>
-    </div>
-</div>
+    </section>
+</main>
 </body>
 </html>

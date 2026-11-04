@@ -1,26 +1,66 @@
 package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 
+/** Единственная строка настроек (id = 1): цены, единицы измерения и коэффициент. */
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @ToString
 public class Setting {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false)
+    private LengthUnit lengthUnit = LengthUnit.CM;
 
-    private BigDecimal montageWorkPrice = BigDecimal.ZERO; // Стоимость приладки
-    private BigDecimal oneOttiskPrice = BigDecimal.ZERO;  // Стоимость оттиска
-    private BigDecimal oneQuadratMetterFoilPrice = BigDecimal.ZERO; //стоимость одного квадратного метра фольги
+    /** Приладка (одноразовая сумма на тиснение). */
+    @Column(nullable = false)
+    private BigDecimal montageWorkPrice = BigDecimal.ZERO;
 
+    /** Цена одного оттиска. */
+    @Column(nullable = false)
+    private BigDecimal oneOttiskPrice = BigDecimal.ZERO;
+
+    /** Цена фольги за единицу площади foilAreaUnit. */
+    @Column(nullable = false)
+    private BigDecimal foilPrice = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false)
+    private AreaUnit foilAreaUnit = AreaUnit.M2;
+
+    /** Базовая цена одного оттиска при печати (за один лист, одна сторона, бумага 90 г). */
+    @Column(nullable = false)
     private BigDecimal pricePrint = BigDecimal.ZERO;
+
+    /** Цена клише за единицу площади clicheAreaUnit. */
+    @Column(nullable = false)
+    private BigDecimal clichePrice = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false)
+    private AreaUnit clicheAreaUnit = AreaUnit.CM2;
+
+    /** Минимальная стоимость одного клише. */
+    @Column(nullable = false)
+    private BigDecimal clicheMinPrice = BigDecimal.ZERO;
+
+    /** Коэффициент, на который умножается итог любого расчёта (1.25 = +25%). */
+    @Column(nullable = false)
+    private BigDecimal markup = new BigDecimal("1.25");
 }

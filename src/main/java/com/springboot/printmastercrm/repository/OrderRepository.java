@@ -3,17 +3,18 @@ package com.springboot.printmastercrm.repository;
 import com.springboot.printmastercrm.entity.Order;
 import com.springboot.printmastercrm.entity.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findByCustomerId(Long customerId);
 
-    List<Order> findByStatus(OrderStatus status);
+    List<Order> findAllByOrderByIdDesc();
 
-    List<Order> findByAccountUsername(String username);
+    List<Order> findByStatusOrderByIdDesc(OrderStatus status);
 
-    List<Order> findByAccountUsernameAndStatus(String username, OrderStatus status);
+    List<Order> findByCustomerIdOrderByIdDesc(Long customerId);
 
-    boolean existsByAccountId(Long accountId);
+    List<Order> findByCustomerIdAndStatusOrderByIdDesc(Long customerId, OrderStatus status);
 
+    void deleteByCustomerId(Long customerId);
 }

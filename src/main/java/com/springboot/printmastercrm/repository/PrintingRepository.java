@@ -6,7 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface PrintingRepository extends JpaRepository<Printing, Long> {
-    List<Printing> findByCustomerId(Long customerId);
+
+    List<Printing> findByCustomerIdOrderByIdDesc(Long customerId);
 
     void deleteByCustomerId(Long customerId);
 }

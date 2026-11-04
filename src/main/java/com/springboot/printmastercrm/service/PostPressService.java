@@ -1,84 +1,86 @@
 package com.springboot.printmastercrm.service;
 
+import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.entity.PostPress;
 import com.springboot.printmastercrm.entity.Setting;
+import com.springboot.printmastercrm.exception.BusinessRuleException;
+import com.springboot.printmastercrm.exception.NotFoundException;
 import com.springboot.printmastercrm.repository.PostPressRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class PostPressService {
 
-    private static final BigDecimal SQ_CM_IN_SQ_M = new BigDecimal("10000");
-    /** Применяется ко всей итоговой сумме любого расчёта. */
-    public static final BigDecimal COEFFICIENT_NDS = new BigDecimal("1.25");
-    private static final BigDecimal COEFFICIENT_WORK = new BigDecimal("1.05");
-    /** Минимальная площадь оттиска, см². */
-    private static final BigDecimal MIN_AREA = new BigDecimal("50");
+    /** Минимальная площадь оттиска, см². Всё, что меньше, считается как эта площадь. */
+    static final BigDecimal MIN_AREA_CM2 = new BigDecimal("50");
+    /** Запас на работу и фольгу. */
+    static final BigDecimal COEFFICIENT_WORK = new BigDecimal("1.05");
 
-    @Autowired
-    private PostPressRepository postPressRepository;
-
-    @Autowired
-    private SettingService settingService;
+    private final PostPressRepository postPressRepository;
+    private final SettingService settingService;
 
     public List<PostPress> findByCustomerId(Long customerId) {
-        return postPressRepository.findByCustomerId(customerId);
+        return postPressRepository.findByCustomerIdOrderByIdDesc(customerId);
     }
 
-    public void save(PostPress postPress) {
-        Setting settings = settingService.getSettings();
-        BigDecimal totalCost = calculateTotal(postPress, settings);
-        postPress.setTotalPrice(totalCost);
-        postPressRepository.save(postPress);
+    @Transactional
+    public PostPress create(Customer customer, BigDecimal widthCm, BigDecimal lengthCm, int quantity) {
+        requirePositive(widthCm, lengthCm, quantity);
+        PostPress postPress = new PostPress();
+        postPress.setCustomer(customer);
+        postPress.setWidthCm(widthCm);
+        postPress.setLengthCm(lengthCm);
+        postPress.setQuantity(quantity);
+        postPress.setTotalPrice(calculateTotal(widthCm, lengthCm, quantity, settingService.getSettings()));
+        return postPressRepository.save(postPress);
     }
 
-
-    public void deletePostPressById(Long id) {
-        if (!postPressRepository.existsById(id)) {
-            throw new IllegalArgumentException("PostPress not found with ID: " + id);
+    @Transactional
+    public void delete(Long customerId, Long id) {
+        PostPress postPress = postPressRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Расчёт не найден"));
+        if (!postPress.getCustomer().getId().equals(customerId)) {
+            throw new NotFoundException("Расчёт не найден");
         }
-        postPressRepository.deleteById(id);
+        postPressRepository.delete(postPress);
     }
 
-    public BigDecimal calculateTotal(PostPress postPress, Setting settings) {
-        BigDecimal quantity = BigDecimal.valueOf(postPress.getQuantity());
-        BigDecimal area = BigDecimal.valueOf(postPress.getWidthSM())
-                .multiply(BigDecimal.valueOf(postPress.getLengthSM()));
-        if (area.compareTo(MIN_AREA) <= 0) {
-            area = MIN_AREA;
+    /**
+     * (работа + фольга) * коэффициент, где
+     * работа = (приладка + оттиск * тираж) * 1.05,
+     * фольга = тираж * площадь * 1.05 * цена фольги за единицу площади.
+     */
+    public BigDecimal calculateTotal(BigDecimal widthCm, BigDecimal lengthCm, int quantity, Setting settings) {
+        BigDecimal qty = BigDecimal.valueOf(quantity);
+        BigDecimal area = widthCm.multiply(lengthCm);
+        if (area.compareTo(MIN_AREA_CM2) <= 0) {
+            area = MIN_AREA_CM2;
         }
-        BigDecimal squareMeters = area.divide(SQ_CM_IN_SQ_M, 10, RoundingMode.HALF_UP);
 
-        BigDecimal foil = quantity.multiply(squareMeters)
+        BigDecimal foil = qty.multiply(area)
                 .multiply(COEFFICIENT_WORK)
-                .multiply(settings.getOneQuadratMetterFoilPrice());
+                .multiply(settings.getFoilPrice())
+                .divide(settings.getFoilAreaUnit().getCm2PerUnit(), 10, RoundingMode.HALF_UP);
 
         BigDecimal work = settings.getMontageWorkPrice()
-                .add(settings.getOneOttiskPrice().multiply(quantity))
+                .add(settings.getOneOttiskPrice().multiply(qty))
                 .multiply(COEFFICIENT_WORK);
 
-        BigDecimal totalCost = work.add(foil)
-                .multiply(COEFFICIENT_NDS)
+        return work.add(foil)
+                .multiply(settings.getMarkup())
                 .setScale(2, RoundingMode.HALF_UP);
-
-        postPress.setTotalPrice(totalCost);
-        return totalCost;
     }
 
-    public List<PostPress> findAll() {
-        return postPressRepository.findAll();
-
+    private static void requirePositive(BigDecimal widthCm, BigDecimal lengthCm, int quantity) {
+        if (widthCm == null || lengthCm == null || widthCm.signum() <= 0 || lengthCm.signum() <= 0 || quantity <= 0) {
+            throw new BusinessRuleException("Ширина, длина и тираж должны быть больше нуля");
+        }
     }
-
-    public PostPress findById(Long postPressId) {
-        return postPressRepository.findById(postPressId)
-                .orElseThrow(() -> new IllegalArgumentException("PostPress not found with ID: " + postPressId));
-    }
-
-
 }
