@@ -3,8 +3,6 @@ package com.springboot.printmastercrm.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import javax.net.ssl.SSLSession;
-
 @Getter
 @Setter
 @AllArgsConstructor
@@ -23,9 +21,6 @@ public class Customer {
     private String phoneNumber;
     @Column(unique = true, nullable = false)
     private String email;
-
-    private String managerUsername;
-
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "account_id", nullable = false)

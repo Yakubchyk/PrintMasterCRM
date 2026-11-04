@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
-<head th:insert="~{_bootstrap::link}">
+<head>
     <meta charset="UTF-8">
     <title>Админ-панель: Настройки</title>
+    <th:block th:insert="~{_bootstrap::head-assets}"></th:block>
 </head>
 <body>
-<header th:insert="~{_header.html}"></header>
+<header th:replace="~{_header :: nav}"></header>
+
+<div class="container-fluid mt-2" th:if="${error != null}">
+    <div class="alert alert-danger" role="alert" th:text="${error}">Ошибка</div>
+</div>
 
 <div class="container-fluid">
     <div class="row align-items-start">
@@ -18,7 +23,8 @@
             <table class="table table-success table-striped">
                 <thead>
                 <tr>
-                    <th>Менеджер</th>
+                    <th>Пользователь</th>
+                    <th>Роль</th>
                     <th>Действия</th>
                 </tr>
                 </thead>
@@ -28,8 +34,10 @@
                 <tr th:each="account : ${accountList}">
 
                     <td th:text="${account.username}"></td>
+                    <td th:text="${#strings.contains(#strings.toString(account.roles), 'ROLE_ADMIN')} ? 'Администратор' : 'Менеджер'"></td>
                     <td>
-                        <form th:action="@{/admin/settings/deleteManager}" method="post">
+                        <form th:if="${account.username != #authentication.name}"
+                              th:action="@{/admin/settings/deleteManager}" method="post">
                             <input type="hidden" name="id" th:value="${account.id}">
                             <button type="submit" class="btn btn-danger">Удалить</button>
                         </form>
@@ -85,7 +93,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="customer : ${customers}">
-                            <td th:text="${customer.managerUsername}"></td>
+                            <td th:text="${customer.account.username}"></td>
                             <td th:text="${customer.username}"></td>
                             <td>
                                 <form th:action="@{/admin/settings/action}" method="post">
@@ -101,18 +109,13 @@
                                     <div class="manager-select-container" style="display: none;">
                                         <select class="form-select mt-1" name="managerId">
                                             <option value="" disabled selected>Выбрать менеджера</option>
-                                            <option th:each="account : ${accountList}"
+                                            <option th:each="account : ${managerList}"
                                                     th:value="${account.id}"
                                                     th:text="${account.username}"></option>
                                         </select>
                                     </div>
 
                                     <button type="submit" class="btn btn-success mt-1">Ок</button>
-                                </form>
-
-                                <form th:action="@{/admin/settings/deleteCustomer}" method="post">
-                                    <input type="hidden" name="id" th:value="${customer.id}">
-                                    <button type="submit" class="btn btn-danger">Удалить</button>
                                 </form>
                             </td>
                         </tr>
@@ -138,7 +141,7 @@
 
     </div>
 
-    <th:block th:insert="~{_bootstrap::script}"></th:block>
+    <th:block th:insert="~{_bootstrap::scripts}"></th:block>
 </div>
 </body>
 </html>

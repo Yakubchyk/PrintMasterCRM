@@ -1,10 +1,13 @@
 package com.springboot.printmastercrm.controller;
 
-import com.springboot.printmastercrm.entity.Account;
+import com.springboot.printmastercrm.dto.RegistrationForm;
+import com.springboot.printmastercrm.exception.ExistsException;
 import com.springboot.printmastercrm.service.AccountService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,18 +22,23 @@ public class AccountController {
 
     @GetMapping("/register")
     public String register(Model model) {
-        model.addAttribute("account", new Account());
+        model.addAttribute("registrationForm", new RegistrationForm());
         return "register";
     }
 
     @PostMapping("/register")
-    public String register(@ModelAttribute Account account) {
-        if (account.getRoles().contains(Account.Role.ROLE_ADMIN)) {
-            accountService.saveAdmin(account);
-        } else {
-            accountService.save(account);
+    public String register(@Valid @ModelAttribute("registrationForm") RegistrationForm form,
+                           BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "register";
         }
-        return "redirect:/";
+        try {
+            accountService.registerManager(form);
+        } catch (ExistsException e) {
+            bindingResult.reject("account.exists", e.getMessage());
+            return "register";
+        }
+        return "redirect:/account/login";
     }
 
     @GetMapping("/login")

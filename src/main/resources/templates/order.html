@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
-<head th:insert="~{_bootstrap::link}">
+<head>
     <meta charset="UTF-8">
     <title>Коммерческое предложение</title>
+    <th:block th:insert="~{_bootstrap::head-assets}"></th:block>
 </head>
 <body>
-<header th:insert="~{_header.html}"></header>
+<header th:replace="~{_header :: nav}"></header>
 
 <div class="container">
     <div class="row align-items-start">
@@ -20,46 +21,49 @@
                 <p>Email: <span th:text="${customer.email}">Email клиента</span></p>
             </div>
 
-            <div>
-                <h4>Предварительные расчеты по работам</h4>
-                <h6>Тиснение</h6>
-                <ul>
-                    <li th:each="pp : ${postPress}">
-                        Тираж: <span th:text="${pp.quantity}"></span>,
-                        Стоимость: <span th:text="${pp.totalPrice}"></span>
-                    </li>
-                </ul>
-                <h6>Печать</h6>
-                <ul>
-                    <li th:each="print : ${printing}">
-                        Тираж: <span th:text="${print.quantity}"></span>
-                        Бумага: <span th:text="${print.papier}"></span>
-                        Стоимость: <span th:text="${print.totalCost}"></span>
+            <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}">Ошибка</div>
 
-                    </li>
-                </ul>
-            </div>
-
-
-            <form th:action="@{/profile/ordeer}" method="post">
+            <form th:action="@{/profile/order}" method="post">
                 <input type="hidden" name="customerId" th:value="${customer.id}">
 
-                <div class="mb-3">
-                    <label for="orderDetails" class="form-label">Детали заказа</label>
-                    <textarea id="orderDetails" name="orderDetails" class="form-control"
+                <h4>Расчеты, входящие в заказ</h4>
+
+                <h6>Тиснение</h6>
+                <div class="text-muted mb-2" th:if="${#lists.isEmpty(postPress)}">Расчетов тиснения нет</div>
+                <div class="form-check" th:each="pp : ${postPress}">
+                    <input class="form-check-input" type="checkbox" name="postPressIds"
+                           th:value="${pp.id}" th:id="${'pp' + pp.id}" checked>
+                    <label class="form-check-label" th:for="${'pp' + pp.id}">
+                        Тираж: <span th:text="${pp.quantity}"></span>,
+                        Стоимость: <span th:text="${pp.totalPrice}"></span>
+                    </label>
+                </div>
+
+                <h6 class="mt-3">Печать</h6>
+                <div class="text-muted mb-2" th:if="${#lists.isEmpty(printing)}">Расчетов печати нет</div>
+                <div class="form-check" th:each="print : ${printing}">
+                    <input class="form-check-input" type="checkbox" name="printingIds"
+                           th:value="${print.id}" th:id="${'pr' + print.id}" checked>
+                    <label class="form-check-label" th:for="${'pr' + print.id}">
+                        Тираж: <span th:text="${print.quantity}"></span>,
+                        Бумага: <span th:text="${print.papier}"></span>,
+                        Стоимость: <span th:text="${print.totalCost}"></span>
+                    </label>
+                </div>
+
+                <div class="mb-3 mt-4">
+                    <label for="product" class="form-label">Детали заказа</label>
+                    <textarea id="product" name="product" class="form-control" required maxlength="255"
                               placeholder="Детали заказа"></textarea>
                 </div>
 
-                <form th:action="@{/html/save}" method="post">
-                    <button type="submit" class="btn btn-primary">Сохранить HTML</button>
-                </form>
-
+                <button type="submit" class="btn btn-primary">Оформить заказ</button>
             </form>
         </div>
         <div class="col-3"></div>
     </div>
 </div>
 
-<th:block th:insert="~{_bootstrap::script}"></th:block>
+<th:block th:insert="~{_bootstrap::scripts}"></th:block>
 </body>
 </html>
