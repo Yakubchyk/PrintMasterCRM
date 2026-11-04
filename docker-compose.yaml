@@ -6,11 +6,33 @@ services:
     environment:
       POSTGRES_DB: printmasterdb
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
+      # 5433 снаружи, чтобы не конфликтовать с локальным PostgreSQL на 5432
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d printmasterdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: printmaster_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/printmasterdb
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-admin}
+      APP_BOOTSTRAP_ADMIN_USERNAME: ${APP_BOOTSTRAP_ADMIN_USERNAME:-}
+      APP_BOOTSTRAP_ADMIN_PASSWORD: ${APP_BOOTSTRAP_ADMIN_PASSWORD:-}
+    ports:
+      - "8080:8080"
 
 volumes:
   postgres_data:

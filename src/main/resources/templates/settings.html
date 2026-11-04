@@ -9,6 +9,10 @@
 <body>
 <header th:insert="~{_header.html}"></header>
 
+<div class="container-fluid mt-2" th:if="${error != null}">
+    <div class="alert alert-danger" role="alert" th:text="${error}">Ошибка</div>
+</div>
+
 <div class="container-fluid">
     <div class="row align-items-start">
 

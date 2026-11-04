@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -57,7 +58,7 @@ public class PostPressService {
 
         BigDecimal totalCost = BigDecimal.valueOf(totalWorkPrice + totalFoilExpense);
 
-        totalCost = totalCost.setScale(2, BigDecimal.ROUND_HALF_UP);
+        totalCost = totalCost.setScale(2, RoundingMode.HALF_UP);
 
         postPress.setTotalPrice(totalCost);
 

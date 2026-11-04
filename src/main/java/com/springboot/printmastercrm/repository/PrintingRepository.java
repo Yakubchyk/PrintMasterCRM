@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface PrintingRepository extends JpaRepository<Printing, Long> {
     List<Printing> findByCustomerId(Long customerId);
+
+    void deleteByCustomerId(Long customerId);
 }

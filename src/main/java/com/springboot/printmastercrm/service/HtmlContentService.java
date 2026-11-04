@@ -2,12 +2,14 @@ package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.HtmlContent;
 import com.springboot.printmastercrm.repository.HtmlContentRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Transactional // чтение/запись LOB в PostgreSQL возможны только внутри транзакции
 public class HtmlContentService {
 
     @Autowired

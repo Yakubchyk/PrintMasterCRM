@@ -11,4 +11,8 @@ public interface PostPressRepository extends JpaRepository<PostPress, Long> {
     List<PostPress> findByCustomerId(Long customerId);
 
     void deleteById(Long id);
+
+    void deleteByCustomerId(Long customerId);
+
+    boolean existsByManagerId(Long managerId);
 }

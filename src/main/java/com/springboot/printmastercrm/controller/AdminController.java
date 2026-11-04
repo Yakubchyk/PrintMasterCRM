@@ -2,8 +2,9 @@ package com.springboot.printmastercrm.controller;
 
 import com.springboot.printmastercrm.entity.*;
 import com.springboot.printmastercrm.service.*;
-import org.apache.catalina.Manager;
+import com.springboot.printmastercrm.exception.BusinessRuleException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -58,8 +59,13 @@ public class AdminController {
     }
 
     @PostMapping("/settings")
-    public String updateSettings(@ModelAttribute("settings") Setting updatedSettings) {
-        settingService.saveSettings(updatedSettings);
+    public String updateSettings(@ModelAttribute("settings") Setting updatedSettings,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            settingService.saveSettings(updatedSettings);
+        } catch (BusinessRuleException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/admin/settings";
     }
 
@@ -73,7 +79,8 @@ public class AdminController {
     public String handleAction(
             @RequestParam("customerId") Long customerId,
             @RequestParam String action,
-            @RequestParam(required = false) Long managerId) {
+            @RequestParam(required = false) Long managerId,
+            RedirectAttributes redirectAttributes) {
 
         switch (action) {
             case "delete":
@@ -82,21 +89,27 @@ public class AdminController {
 
             case "transfer":
                 if (managerId == null) {
-                    throw new IllegalArgumentException("Manager ID is required for transfer action.");
+                    redirectAttributes.addFlashAttribute("error", "Выберите менеджера, которому передать клиента");
+                    break;
                 }
                 customerService.transferCustomerToManager(customerId, managerId);
                 break;
 
             default:
-                throw new IllegalArgumentException("Unknown action: " + action);
+                redirectAttributes.addFlashAttribute("error", "Неизвестное действие: " + action);
         }
 
         return "redirect:/admin/settings";
     }
 
     @PostMapping("/settings/deleteManager")
-    public String deleteManager(@RequestParam("id") Long managerId) {
-        accountService.deleteManagerById(managerId);
+    public String deleteManager(@RequestParam("id") Long managerId, Authentication authentication,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            accountService.deleteManagerById(managerId, authentication.getName());
+        } catch (BusinessRuleException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/admin/settings";
     }
 

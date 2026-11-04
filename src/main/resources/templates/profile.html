@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
-    <title>PostMasterCRM</title>
+    <title>PrintMasterCRM</title>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </head>
@@ -25,6 +25,7 @@
 
         <div class="col-9">
             <h6>Список клиентов</h6>
+            <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}">Ошибка</div>
             <table class="table table-success table-striped">
                 <tbody>
                 <tr th:each="customer : ${customers}">
@@ -35,7 +36,7 @@
                     <td th:text="${customer.email}">Email клиента</td>
                     <td>
                         <div th:if="${selectedCustomer != null and selectedCustomer.id == customer.id}">
-                            <a th:href="@{/profile/orders/{id}(id=${customer.id})}">Заказы</a>
+                            <a th:href="@{/orders(customerId=${customer.id})}">Заказы</a>
                         </div>
                     </td>
                     <td>
@@ -50,6 +51,50 @@
                 </tr>
                 </tbody>
             </table>
+
+            <div th:if="${selectedCustomer != null}">
+                <h6 class="mt-4">Расчеты тиснения</h6>
+                <div class="text-muted" th:if="${#lists.isEmpty(postPressList)}">Расчетов нет</div>
+                <table class="table table-sm" th:unless="${#lists.isEmpty(postPressList)}">
+                    <thead>
+                    <tr>
+                        <th>Ширина (см)</th>
+                        <th>Длина (см)</th>
+                        <th>Тираж</th>
+                        <th>Стоимость</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="pp : ${postPressList}">
+                        <td th:text="${pp.widthSM}"></td>
+                        <td th:text="${pp.lengthSM}"></td>
+                        <td th:text="${pp.quantity}"></td>
+                        <td th:text="${pp.totalPrice}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <h6 class="mt-4">Расчеты печати</h6>
+                <div class="text-muted" th:if="${#lists.isEmpty(printingList)}">Расчетов нет</div>
+                <table class="table table-sm" th:unless="${#lists.isEmpty(printingList)}">
+                    <thead>
+                    <tr>
+                        <th>Бумага</th>
+                        <th>Цветность</th>
+                        <th>Тираж</th>
+                        <th>Стоимость</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="pr : ${printingList}">
+                        <td th:text="${pr.papier}"></td>
+                        <td th:text="${pr.colour}"></td>
+                        <td th:text="${pr.quantity}"></td>
+                        <td th:text="${pr.totalCost}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
@@ -79,8 +124,6 @@
                                     <label class="form-label">Email</label>
                                     <input type="email" class="form-control" th:field="*{email}" placeholder="Email">
                                 </div>
-                                <input type="hidden" th:field="*{managerUsername}">
-                                <input type="hidden" th:field="*{account.id}">
                                 <button type="submit" class="btn btn-success">Сохранить изменения</button>
                             </form>
                         </div>

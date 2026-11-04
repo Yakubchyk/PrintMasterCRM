@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -46,12 +47,15 @@ public class PrintingService {
         double densityMultiplier = getDensityMultiplier(printing.getPapier());
         double rawCost = basePrice * colorMultiplier * printing.getQuantity() * densityMultiplier;
 
-        BigDecimal roundedCost = BigDecimal.valueOf(rawCost).setScale(2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal roundedCost = BigDecimal.valueOf(rawCost).setScale(2, RoundingMode.HALF_UP);
 
         return roundedCost.doubleValue();
     }
 
     private double getDensityMultiplier(String papier) {
+        if (papier == null) {
+            return 1.0;
+        }
         switch (papier) {
             case "90g/m2":
                 return 1.0;
