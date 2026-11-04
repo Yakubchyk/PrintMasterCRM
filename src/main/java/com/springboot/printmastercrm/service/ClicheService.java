@@ -74,7 +74,7 @@ public class ClicheService {
 
     /**
      * Размеры здесь — общие (с полями). Одно клише = max(площадь * цена за единицу площади, минимальная цена).
-     * Итог = цена одного * количество * коэффициент.
+     * Итог = цена одного * количество (коэффициент здесь не применяется — он только для тиснения).
      */
     public BigDecimal calculateTotal(BigDecimal widthCm, BigDecimal lengthCm, int quantity, Setting settings) {
         BigDecimal area = widthCm.multiply(lengthCm);
@@ -84,7 +84,6 @@ public class ClicheService {
             one = settings.getClicheMinPrice();
         }
         return one.multiply(BigDecimal.valueOf(quantity))
-                .multiply(settings.getMarkup())
                 .setScale(2, RoundingMode.HALF_UP);
     }
 }

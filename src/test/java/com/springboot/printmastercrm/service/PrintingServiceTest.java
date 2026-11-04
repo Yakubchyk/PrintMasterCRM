@@ -27,26 +27,26 @@ class PrintingServiceTest {
 
     @Test
     void oneSidedLightPaper() {
-        // 0,10 * 1 * 1000 * 1,0 * 1,25 = 125,00
-        assertThat(service.calculateCost("90g/m2", "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("125.00");
+        // 0,10 * 1 * 1000 * 1,0 = 100,00
+        assertThat(service.calculateCost("90g/m2", "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("100.00");
     }
 
     @Test
     void twoSidedHeavierPaperCostsMore() {
-        // 0,10 * 2 * 1000 * 1,2 * 1,25 = 300,00
-        assertThat(service.calculateCost("150g/m2", "4+4", 1000, TestSettings.standard())).isEqualByComparingTo("300.00");
+        // 0,10 * 2 * 1000 * 1,2 = 240,00
+        assertThat(service.calculateCost("150g/m2", "4+4", 1000, TestSettings.standard())).isEqualByComparingTo("240.00");
     }
 
     @Test
     void densityMultipliers() {
-        assertThat(service.calculateCost("200g/m2", "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("175.00");
-        assertThat(service.calculateCost("300g/m2", "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("200.00");
+        assertThat(service.calculateCost("200g/m2", "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("140.00");
+        assertThat(service.calculateCost("300g/m2", "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("160.00");
     }
 
     @Test
     void unknownOrMissingPaperUsesBasePrice() {
-        assertThat(service.calculateCost("???", "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("125.00");
-        assertThat(service.calculateCost(null, "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("125.00");
+        assertThat(service.calculateCost("???", "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("100.00");
+        assertThat(service.calculateCost(null, "4+0", 1000, TestSettings.standard())).isEqualByComparingTo("100.00");
     }
 
     @Test
@@ -62,7 +62,7 @@ class PrintingServiceTest {
 
         Printing saved = service.create(Customer.builder().id(1L).build(), "90g/m2", "4+0", 1000);
 
-        assertThat(saved.getTotalCost()).isEqualByComparingTo("125.00");
+        assertThat(saved.getTotalCost()).isEqualByComparingTo("100.00");
     }
 
     @Test

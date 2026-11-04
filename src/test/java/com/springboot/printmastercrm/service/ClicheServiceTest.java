@@ -35,14 +35,14 @@ class ClicheServiceTest {
 
     @Test
     void smallClicheCostsMinimumPrice() {
-        // 4x5 = 20 см² * 0,5 = 10 < минимум 20; 3 шт: 20*3*1,25 = 75,00
-        assertThat(service.calculateTotal(d("4"), d("5"), 3, TestSettings.standard())).isEqualByComparingTo("75.00");
+        // 4x5 = 20 см² * 0,5 = 10 < минимум 20; 3 шт: 20*3 = 60,00
+        assertThat(service.calculateTotal(d("4"), d("5"), 3, TestSettings.standard())).isEqualByComparingTo("60.00");
     }
 
     @Test
     void largeClichePaysByArea() {
-        // 10x10 = 100 см² * 0,5 = 50; 2 шт: 50*2*1,25 = 125,00
-        assertThat(service.calculateTotal(d("10"), d("10"), 2, TestSettings.standard())).isEqualByComparingTo("125.00");
+        // 10x10 = 100 см² * 0,5 = 50; 2 шт: 50*2 = 100,00
+        assertThat(service.calculateTotal(d("10"), d("10"), 2, TestSettings.standard())).isEqualByComparingTo("100.00");
     }
 
     @Test
@@ -51,7 +51,7 @@ class ClicheServiceTest {
         perM2.setClichePrice(d("5000"));
         perM2.setClicheAreaUnit(AreaUnit.M2);
 
-        assertThat(service.calculateTotal(d("10"), d("10"), 2, perM2)).isEqualByComparingTo("125.00");
+        assertThat(service.calculateTotal(d("10"), d("10"), 2, perM2)).isEqualByComparingTo("100.00");
     }
 
     @Test
@@ -61,7 +61,7 @@ class ClicheServiceTest {
 
         Cliche saved = service.create(Customer.builder().id(1L).build(), d("10"), d("10"), 2);
 
-        assertThat(saved.getTotalPrice()).isEqualByComparingTo("125.00");
+        assertThat(saved.getTotalPrice()).isEqualByComparingTo("100.00");
         assertThat(saved.getQuantity()).isEqualTo(2);
     }
 
@@ -78,13 +78,13 @@ class ClicheServiceTest {
         when(settingService.getSettings()).thenReturn(TestSettings.standard());
         when(clicheRepository.save(any(Cliche.class))).thenAnswer(i -> i.getArgument(0));
 
-        // рабочее поле 8x8, поля по 1: общий размер 10x10 = 100 см² * 0,5 = 50; 2 шт: 50*2*1,25 = 125,00
+        // рабочее поле 8x8, поля по 1: общий размер 10x10 = 100 см² * 0,5 = 50; 2 шт: 50*2 = 100,00
         Cliche saved = service.create(Customer.builder().id(1L).build(), d("8"), d("8"), d("1"), 2, null);
 
         assertThat(saved.getTotalWidthCm()).isEqualByComparingTo("10");
         assertThat(saved.getTotalLengthCm()).isEqualByComparingTo("10");
         assertThat(saved.getTotalAreaCm2()).isEqualByComparingTo("200");
-        assertThat(saved.getTotalPrice()).isEqualByComparingTo("125.00");
+        assertThat(saved.getTotalPrice()).isEqualByComparingTo("100.00");
     }
 
     @Test
