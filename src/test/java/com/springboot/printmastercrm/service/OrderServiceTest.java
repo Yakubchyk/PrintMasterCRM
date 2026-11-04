@@ -176,8 +176,9 @@ class OrderServiceTest {
         paper.setId(7L);
         paper.setName("Картон");
         when(materialService.get(7L)).thenReturn(paper);
+        when(clicheRepository.findById(3L)).thenReturn(Optional.of(cliche(customer, "75.00")));
 
-        Order order = service.createOrder(customer, "Визитки", null, null, null,
+        Order order = service.createOrder(customer, "Визитки", null, null, List.of(3L),
                 Map.of(7L, new BigDecimal("50"), 8L, BigDecimal.ZERO));
 
         verify(materialService).consume(eq(7L), eq(new BigDecimal("50")), any());
@@ -191,10 +192,11 @@ class OrderServiceTest {
 
     @Test
     void insufficientStockPropagatesSoOrderIsRolledBack() {
+        when(clicheRepository.findById(3L)).thenReturn(Optional.of(cliche(customer, "75.00")));
         doThrow(new BusinessRuleException("На складе недостаточно"))
                 .when(materialService).consume(eq(7L), any(), any());
 
-        assertThatThrownBy(() -> service.createOrder(customer, "x", null, null, null,
+        assertThatThrownBy(() -> service.createOrder(customer, "x", null, null, List.of(3L),
                 Map.of(7L, new BigDecimal("999"))))
                 .isInstanceOf(BusinessRuleException.class);
         verify(orderMaterialRepository, never()).save(any());
