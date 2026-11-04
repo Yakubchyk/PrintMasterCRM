@@ -34,7 +34,7 @@ class CustomerServiceTest {
     @Mock
     private ClicheRepository clicheRepository;
     @Mock
-    private OrderRepository orderRepository;
+    private OrderService orderService;
     @InjectMocks
     private CustomerService service;
 
@@ -114,8 +114,8 @@ class CustomerServiceTest {
 
         service.delete(10L);
 
-        InOrder order = inOrder(orderRepository, postPressRepository, printingRepository, clicheRepository, customerRepository);
-        order.verify(orderRepository).deleteByCustomerId(10L);
+        InOrder order = inOrder(orderService, postPressRepository, printingRepository, clicheRepository, customerRepository);
+        order.verify(orderService).deleteByCustomer(10L);
         order.verify(postPressRepository).deleteByCustomerId(10L);
         order.verify(printingRepository).deleteByCustomerId(10L);
         order.verify(clicheRepository).deleteByCustomerId(10L);

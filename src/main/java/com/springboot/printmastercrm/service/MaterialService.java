@@ -1,13 +1,14 @@
 package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.Material;
-import com.springboot.printmastercrm.entity.MaterialUnit;
+import com.springboot.printmastercrm.entity.MaterialCategory;
 import com.springboot.printmastercrm.entity.MovementType;
 import com.springboot.printmastercrm.entity.StockMovement;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.ExistsException;
 import com.springboot.printmastercrm.exception.NotFoundException;
 import com.springboot.printmastercrm.repository.MaterialRepository;
+import com.springboot.printmastercrm.repository.OrderMaterialRepository;
 import com.springboot.printmastercrm.repository.StockMovementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,14 @@ public class MaterialService {
 
     private final MaterialRepository materialRepository;
     private final StockMovementRepository movementRepository;
+    private final OrderMaterialRepository orderMaterialRepository;
 
     public List<Material> findAll() {
         return materialRepository.findAllByOrderByNameAsc();
+    }
+
+    public List<Material> findByCategory(MaterialCategory category) {
+        return materialRepository.findByCategoryOrderByNameAsc(category);
     }
 
     public Material get(Long id) {
@@ -36,9 +42,13 @@ public class MaterialService {
         return movementRepository.findByMaterialIdOrderByIdDesc(materialId);
     }
 
-    /** Создаёт материал; ненулевой начальный остаток записывается как приход. */
+    /** Создаёт материал в разделе; ненулевой начальный остаток записывается как приход. */
     @Transactional
-    public Material create(String name, MaterialUnit unit, BigDecimal initialStock, String note) {
+    public Material create(String name, MaterialCategory category, String sheetSize,
+                           BigDecimal initialStock, String note) {
+        if (category == null) {
+            throw new BusinessRuleException("Выберите раздел склада");
+        }
         String trimmed = requireName(name);
         if (materialRepository.existsByName(trimmed)) {
             throw new ExistsException("Материал с таким названием уже есть");
@@ -48,7 +58,8 @@ public class MaterialService {
         }
         Material material = new Material();
         material.setName(trimmed);
-        material.setUnit(unit == null ? MaterialUnit.PCS : unit);
+        material.setCategory(category);
+        material.setSheetSize(sheetSizeFor(category, sheetSize));
         material.setNote(clean(note));
         material = materialRepository.save(material);
         if (initialStock != null && initialStock.signum() > 0) {
@@ -57,17 +68,16 @@ public class MaterialService {
         return material;
     }
 
+    /** Раздел материала не меняется: от него зависит единица учёта. */
     @Transactional
-    public Material update(Long id, String name, MaterialUnit unit, String note) {
+    public Material update(Long id, String name, String sheetSize, String note) {
         Material material = get(id);
         String trimmed = requireName(name);
         if (materialRepository.existsByNameAndIdNot(trimmed, id)) {
             throw new ExistsException("Материал с таким названием уже есть");
         }
         material.setName(trimmed);
-        if (unit != null) {
-            material.setUnit(unit);
-        }
+        material.setSheetSize(sheetSizeFor(material.getCategory(), sheetSize));
         material.setNote(clean(note));
         return materialRepository.save(material);
     }
@@ -82,10 +92,14 @@ public class MaterialService {
         move(id, MovementType.OUT, quantity, note);
     }
 
-    /** Удаляет материал вместе с историей движения. */
+    /** Удаляет материал вместе с историей движения, если он не использован в заказах. */
     @Transactional
     public void delete(Long id) {
         Material material = get(id);
+        if (orderMaterialRepository.existsByMaterialId(id)) {
+            throw new BusinessRuleException("Материал «" + material.getName()
+                    + "» списывался на заказы, удалить его нельзя");
+        }
         movementRepository.deleteByMaterialId(id);
         materialRepository.delete(material);
     }
@@ -94,8 +108,11 @@ public class MaterialService {
         if (quantity == null || quantity.signum() <= 0) {
             throw new BusinessRuleException("Количество должно быть больше нуля");
         }
-        BigDecimal amount = quantity.setScale(3, RoundingMode.HALF_UP);
         Material material = get(id);
+        if (material.getUnit().isWhole() && quantity.stripTrailingZeros().scale() > 0) {
+            throw new BusinessRuleException("«" + material.getName() + "»: листы указываются целым числом");
+        }
+        BigDecimal amount = quantity.setScale(3, RoundingMode.HALF_UP);
         BigDecimal newStock = type == MovementType.IN ? material.getStock().add(amount) : material.getStock().subtract(amount);
         if (newStock.signum() < 0) {
             throw new BusinessRuleException("На складе недостаточно материала «" + material.getName()
@@ -111,6 +128,10 @@ public class MaterialService {
         movement.setQuantity(amount);
         movement.setNote(clean(note));
         movementRepository.save(movement);
+    }
+
+    private static String sheetSizeFor(MaterialCategory category, String sheetSize) {
+        return category == MaterialCategory.PAPER ? clean(sheetSize) : null;
     }
 
     private static String requireName(String name) {

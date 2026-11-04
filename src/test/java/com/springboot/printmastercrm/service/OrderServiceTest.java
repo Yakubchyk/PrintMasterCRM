@@ -4,23 +4,28 @@ import com.springboot.printmastercrm.entity.*;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.NotFoundException;
 import com.springboot.printmastercrm.repository.ClicheRepository;
+import com.springboot.printmastercrm.repository.OrderMaterialRepository;
 import com.springboot.printmastercrm.repository.OrderRepository;
 import com.springboot.printmastercrm.repository.PostPressRepository;
 import com.springboot.printmastercrm.repository.PrintingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -37,6 +42,10 @@ class OrderServiceTest {
     private PrintingRepository printingRepository;
     @Mock
     private ClicheRepository clicheRepository;
+    @Mock
+    private OrderMaterialRepository orderMaterialRepository;
+    @Mock
+    private MaterialService materialService;
     @InjectMocks
     private OrderService service;
 
@@ -77,7 +86,7 @@ class OrderServiceTest {
         when(printingRepository.findById(2L)).thenReturn(Optional.of(printing(customer, "125.00")));
         when(clicheRepository.findById(3L)).thenReturn(Optional.of(cliche(customer, "75.00")));
 
-        Order order = service.createOrder(customer, "  Визитки  ", List.of(1L), List.of(2L), List.of(3L));
+        Order order = service.createOrder(customer, "  Визитки  ", List.of(1L), List.of(2L), List.of(3L), null);
 
         assertThat(order.getPostpressPrice()).isEqualByComparingTo("164.06");
         assertThat(order.getPrintingPrice()).isEqualByComparingTo("125.00");
@@ -91,7 +100,7 @@ class OrderServiceTest {
     void sameCalculationSelectedTwiceCountsOnce() {
         when(postPressRepository.findById(1L)).thenReturn(Optional.of(postPress(customer, "100.00")));
 
-        Order order = service.createOrder(customer, "x", List.of(1L, 1L), null, null);
+        Order order = service.createOrder(customer, "x", List.of(1L, 1L), null, null, null);
 
         assertThat(order.getTotalCost()).isEqualByComparingTo("100.00");
     }
@@ -100,7 +109,7 @@ class OrderServiceTest {
     void calculationOfAnotherCustomerIsRejected() {
         when(clicheRepository.findById(3L)).thenReturn(Optional.of(cliche(other, "75.00")));
 
-        assertThatThrownBy(() -> service.createOrder(customer, "x", null, null, List.of(3L)))
+        assertThatThrownBy(() -> service.createOrder(customer, "x", null, null, List.of(3L), null))
                 .isInstanceOf(NotFoundException.class);
         verify(orderRepository, never()).save(any());
     }
@@ -109,15 +118,15 @@ class OrderServiceTest {
     void unknownCalculationIsNotFound() {
         when(printingRepository.findById(5L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.createOrder(customer, "x", null, List.of(5L), null))
+        assertThatThrownBy(() -> service.createOrder(customer, "x", null, List.of(5L), null, null))
                 .isInstanceOf(NotFoundException.class);
     }
 
     @Test
     void requiresDescriptionAndAtLeastOneCalculation() {
-        assertThatThrownBy(() -> service.createOrder(customer, "  ", List.of(1L), null, null))
+        assertThatThrownBy(() -> service.createOrder(customer, "  ", List.of(1L), null, null, null))
                 .isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> service.createOrder(customer, "x", null, null, null))
+        assertThatThrownBy(() -> service.createOrder(customer, "x", null, null, null, null))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
@@ -156,8 +165,58 @@ class OrderServiceTest {
 
     @Test
     void deleteOfMissingOrderIsNotFound() {
-        when(orderRepository.existsById(1L)).thenReturn(false);
+        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.delete(1L)).isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void createOrderConsumesMaterialsAndRemembersThem() {
+        Material paper = new Material();
+        paper.setId(7L);
+        paper.setName("Картон");
+        when(materialService.get(7L)).thenReturn(paper);
+
+        Order order = service.createOrder(customer, "Визитки", null, null, null,
+                Map.of(7L, new BigDecimal("50"), 8L, BigDecimal.ZERO));
+
+        verify(materialService).consume(eq(7L), eq(new BigDecimal("50")), any());
+        verify(materialService, never()).consume(eq(8L), any(), any());
+        ArgumentCaptor<OrderMaterial> captor = ArgumentCaptor.forClass(OrderMaterial.class);
+        verify(orderMaterialRepository).save(captor.capture());
+        assertThat(captor.getValue().getMaterial()).isSameAs(paper);
+        assertThat(captor.getValue().getQuantity()).isEqualByComparingTo("50");
+        assertThat(captor.getValue().getOrder()).isSameAs(order);
+    }
+
+    @Test
+    void insufficientStockPropagatesSoOrderIsRolledBack() {
+        doThrow(new BusinessRuleException("На складе недостаточно"))
+                .when(materialService).consume(eq(7L), any(), any());
+
+        assertThatThrownBy(() -> service.createOrder(customer, "x", null, null, null,
+                Map.of(7L, new BigDecimal("999"))))
+                .isInstanceOf(BusinessRuleException.class);
+        verify(orderMaterialRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteReturnsMaterialsToStock() {
+        Order order = new Order();
+        order.setId(3L);
+        Material paper = new Material();
+        paper.setId(7L);
+        OrderMaterial used = new OrderMaterial();
+        used.setOrder(order);
+        used.setMaterial(paper);
+        used.setQuantity(new BigDecimal("50"));
+        when(orderRepository.findById(3L)).thenReturn(Optional.of(order));
+        when(orderMaterialRepository.findByOrderId(3L)).thenReturn(List.of(used));
+
+        service.delete(3L);
+
+        verify(materialService).receive(eq(7L), eq(new BigDecimal("50")), any());
+        verify(orderMaterialRepository).delete(used);
+        verify(orderRepository).delete(order);
     }
 }

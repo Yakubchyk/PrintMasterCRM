@@ -2,6 +2,8 @@ package com.springboot.printmastercrm.controller;
 
 import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.entity.LengthUnit;
+import com.springboot.printmastercrm.entity.MaterialCategory;
+import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.entity.Setting;
 import com.springboot.printmastercrm.service.*;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +12,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/customers")
@@ -23,6 +27,7 @@ public class CustomerController {
     private final ClicheService clicheService;
     private final OrderService orderService;
     private final SettingService settingService;
+    private final MaterialService materialService;
 
     @GetMapping
     public String list(@RequestParam(value = "q", required = false) String q, Model model) {
@@ -50,6 +55,8 @@ public class CustomerController {
         model.addAttribute("orders", orderService.find(null, id));
         model.addAttribute("papers", PrintingService.PAPERS);
         model.addAttribute("colours", PrintingService.COLOURS);
+        model.addAttribute("categories", MaterialCategory.values());
+        model.addAttribute("materialsByCategory", materialsByCategory());
         return "customer";
     }
 
@@ -111,12 +118,49 @@ public class CustomerController {
         return "redirect:/customers/" + id;
     }
 
+    /** Поля расхода материалов называются m_<id материала>; пустые и нулевые пропускаются. */
     @PostMapping("/{id}/orders")
     public String createOrder(@PathVariable Long id, @RequestParam String product,
                               @RequestParam(value = "postPressIds", required = false) List<Long> postPressIds,
                               @RequestParam(value = "printingIds", required = false) List<Long> printingIds,
-                              @RequestParam(value = "clicheIds", required = false) List<Long> clicheIds) {
-        orderService.createOrder(customerService.get(id), product, postPressIds, printingIds, clicheIds);
+                              @RequestParam(value = "clicheIds", required = false) List<Long> clicheIds,
+                              @RequestParam Map<String, String> params) {
+        orderService.createOrder(customerService.get(id), product, postPressIds, printingIds, clicheIds,
+                parseConsumption(params));
         return "redirect:/customers/" + id;
+    }
+
+    static Map<Long, BigDecimal> parseConsumption(Map<String, String> params) {
+        Map<Long, BigDecimal> consumption = new LinkedHashMap<>();
+        for (Map.Entry<String, String> param : params.entrySet()) {
+            if (!param.getKey().startsWith("m_")) {
+                continue;
+            }
+            String raw = param.getValue() == null ? "" : param.getValue().trim().replace(',', '.');
+            if (raw.isEmpty()) {
+                continue;
+            }
+            try {
+                Long materialId = Long.valueOf(param.getKey().substring(2));
+                BigDecimal quantity = new BigDecimal(raw);
+                if (quantity.signum() < 0) {
+                    throw new BusinessRuleException("Расход материала не может быть отрицательным");
+                }
+                if (quantity.signum() > 0) {
+                    consumption.put(materialId, quantity);
+                }
+            } catch (NumberFormatException e) {
+                throw new BusinessRuleException("Расход материала указан неверно: «" + raw + "»");
+            }
+        }
+        return consumption;
+    }
+
+    private Map<MaterialCategory, List<com.springboot.printmastercrm.entity.Material>> materialsByCategory() {
+        Map<MaterialCategory, List<com.springboot.printmastercrm.entity.Material>> result = new LinkedHashMap<>();
+        for (MaterialCategory category : MaterialCategory.values()) {
+            result.put(category, materialService.findByCategory(category));
+        }
+        return result;
     }
 }

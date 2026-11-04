@@ -25,7 +25,14 @@
                 <td th:text="${o.id}"></td>
                 <td th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></td>
                 <td><a th:href="@{/customers/{id}(id=${o.customer.id})}" th:text="${o.customer.name}">Клиент</a></td>
-                <td th:text="${o.product}"></td>
+                <td>
+                    <span th:text="${o.product}"></span>
+                    <div class="muted" th:if="${consumption.get(o.id) != null}">
+                        Списано:
+                        <span th:each="u, st : ${consumption.get(o.id)}"
+                              th:text="${u.material.name} + ' — ' + ${u.quantity.stripTrailingZeros().toPlainString()} + ' ' + ${u.material.unit.label} + (${st.last} ? '' : '; ')"></span>
+                    </div>
+                </td>
                 <td class="num total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
                 <td>
                     <form class="inline" method="post" th:action="@{/orders/{id}/status(id=${o.id})}">
@@ -37,7 +44,7 @@
                 </td>
                 <td class="num">
                     <form class="inline" method="post" th:action="@{/orders/{id}/delete(id=${o.id})}"
-                          onsubmit="return confirm('Удалить заказ?')">
+                          onsubmit="return confirm('Удалить заказ? Списанные материалы вернутся на склад.')">
                         <button type="submit" class="danger small" title="Удалить заказ">✕</button>
                     </form>
                 </td>

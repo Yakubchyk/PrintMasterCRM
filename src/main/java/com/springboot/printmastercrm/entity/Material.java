@@ -27,11 +27,19 @@ public class Material {
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false)
-    private MaterialUnit unit = MaterialUnit.PCS;
+    private MaterialCategory category = MaterialCategory.PAPER;
 
-    /** Текущий остаток на складе в единицах unit. */
+    /** Размер листа, например «70×100 см» или «SRA3». Только для бумаги и картона. */
+    private String sheetSize;
+
+    /** Текущий остаток в единицах раздела: листы или см². */
     @Column(nullable = false)
     private BigDecimal stock = BigDecimal.ZERO;
 
     private String note;
+
+    /** Единица учёта определяется разделом. В базе не хранится. */
+    public StockUnit getUnit() {
+        return category.getUnit();
+    }
 }

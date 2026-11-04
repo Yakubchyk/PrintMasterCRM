@@ -1,12 +1,13 @@
 package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.Material;
-import com.springboot.printmastercrm.entity.MaterialUnit;
+import com.springboot.printmastercrm.entity.MaterialCategory;
 import com.springboot.printmastercrm.entity.MovementType;
 import com.springboot.printmastercrm.entity.StockMovement;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.ExistsException;
 import com.springboot.printmastercrm.repository.MaterialRepository;
+import com.springboot.printmastercrm.repository.OrderMaterialRepository;
 import com.springboot.printmastercrm.repository.StockMovementRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,8 @@ class MaterialServiceTest {
     private MaterialRepository materialRepository;
     @Mock
     private StockMovementRepository movementRepository;
+    @Mock
+    private OrderMaterialRepository orderMaterialRepository;
     @InjectMocks
     private MaterialService service;
 
@@ -43,8 +46,8 @@ class MaterialServiceTest {
     void setUp() {
         foil = new Material();
         foil.setId(1L);
-        foil.setName("Фольга золото");
-        foil.setUnit(MaterialUnit.ROLL);
+        foil.setName("Картон 300");
+        foil.setCategory(MaterialCategory.PAPER);
         foil.setStock(new BigDecimal("10.000"));
         lenient().when(materialRepository.findById(1L)).thenReturn(Optional.of(foil));
         lenient().when(materialRepository.save(any(Material.class))).thenAnswer(i -> i.getArgument(0));
@@ -64,9 +67,9 @@ class MaterialServiceTest {
 
     @Test
     void consumeDecreasesStock() {
-        service.consume(1L, new BigDecimal("4.5"), null);
+        service.consume(1L, new BigDecimal("4"), null);
 
-        assertThat(foil.getStock()).isEqualByComparingTo("5.5");
+        assertThat(foil.getStock()).isEqualByComparingTo("6");
         ArgumentCaptor<StockMovement> captor = ArgumentCaptor.forClass(StockMovement.class);
         verify(movementRepository).save(captor.capture());
         assertThat(captor.getValue().getMovementType()).isEqualTo(MovementType.OUT);
@@ -77,7 +80,7 @@ class MaterialServiceTest {
         service.consume(1L, new BigDecimal("10"), null);
         assertThat(foil.getStock()).isEqualByComparingTo("0");
 
-        assertThatThrownBy(() -> service.consume(1L, new BigDecimal("0.001"), null))
+        assertThatThrownBy(() -> service.consume(1L, new BigDecimal("1"), null))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("недостаточно");
     }
@@ -100,11 +103,11 @@ class MaterialServiceTest {
 
     @Test
     void createRejectsDuplicateNameAndBlankName() {
-        when(materialRepository.existsByName("Фольга золото")).thenReturn(true);
+        when(materialRepository.existsByName("Картон 300")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create("Фольга золото", MaterialUnit.ROLL, null, null))
+        assertThatThrownBy(() -> service.create("Картон 300", MaterialCategory.PAPER, null, null, null))
                 .isInstanceOf(ExistsException.class);
-        assertThatThrownBy(() -> service.create("  ", MaterialUnit.ROLL, null, null))
+        assertThatThrownBy(() -> service.create("  ", MaterialCategory.PAPER, null, null, null))
                 .isInstanceOf(BusinessRuleException.class);
     }
 
@@ -121,7 +124,7 @@ class MaterialServiceTest {
         });
         when(materialRepository.findById(2L)).thenAnswer(i -> Optional.of(created[0]));
 
-        Material material = service.create(" Бумага ", MaterialUnit.PCS, new BigDecimal("500"), null);
+        Material material = service.create(" Бумага ", MaterialCategory.PAPER, "70x100", new BigDecimal("500"), null);
 
         assertThat(material.getName()).isEqualTo("Бумага");
         assertThat(material.getStock()).isEqualByComparingTo("500");
@@ -132,8 +135,51 @@ class MaterialServiceTest {
     void updateRejectsNameOfAnotherMaterial() {
         when(materialRepository.existsByNameAndIdNot("Бумага", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.update(1L, "Бумага", MaterialUnit.PCS, null))
+        assertThatThrownBy(() -> service.update(1L, "Бумага", null, null))
                 .isInstanceOf(ExistsException.class);
+    }
+
+    @Test
+    void sheetsMustBeWholeNumbers() {
+        assertThatThrownBy(() -> service.receive(1L, new BigDecimal("2.5"), null))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("целым");
+        service.receive(1L, new BigDecimal("2.0"), null);
+        assertThat(foil.getStock()).isEqualByComparingTo("12");
+    }
+
+    @Test
+    void clicheMaterialsAcceptFractionsOfSquareCm() {
+        Material magnesium = new Material();
+        magnesium.setId(5L);
+        magnesium.setName("Магний 7 мм");
+        magnesium.setCategory(MaterialCategory.MAGNESIUM);
+        magnesium.setStock(new BigDecimal("1000"));
+        when(materialRepository.findById(5L)).thenReturn(Optional.of(magnesium));
+
+        service.consume(5L, new BigDecimal("12.5"), null);
+
+        assertThat(magnesium.getStock()).isEqualByComparingTo("987.5");
+    }
+
+    @Test
+    void sheetSizeIsKeptOnlyForPaper() {
+        when(materialRepository.save(any(Material.class))).thenAnswer(i -> i.getArgument(0));
+
+        Material paper = service.create("Мелованная", MaterialCategory.PAPER, " 70x100 ", null, null);
+        Material brass = service.create("Латунь 2 мм", MaterialCategory.BRASS, "70x100", null, null);
+
+        assertThat(paper.getSheetSize()).isEqualTo("70x100");
+        assertThat(brass.getSheetSize()).isNull();
+        assertThat(brass.getUnit().getLabel()).isEqualTo("см²");
+    }
+
+    @Test
+    void usedMaterialCannotBeDeleted() {
+        when(orderMaterialRepository.existsByMaterialId(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.delete(1L)).isInstanceOf(BusinessRuleException.class);
+        verify(materialRepository, never()).delete(any(Material.class));
     }
 
     @Test

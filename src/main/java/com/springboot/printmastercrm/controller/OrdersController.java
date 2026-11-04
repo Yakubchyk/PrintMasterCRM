@@ -1,5 +1,6 @@
 package com.springboot.printmastercrm.controller;
 
+import com.springboot.printmastercrm.entity.Order;
 import com.springboot.printmastercrm.entity.OrderStatus;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.service.OrderService;
@@ -7,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/orders")
@@ -18,7 +21,9 @@ public class OrdersController {
     @GetMapping
     public String list(@RequestParam(value = "status", required = false) String status,
                        @RequestParam(value = "customerId", required = false) Long customerId, Model model) {
-        model.addAttribute("orders", orderService.find(parseStatus(status), customerId));
+        List<Order> orders = orderService.find(parseStatus(status), customerId);
+        model.addAttribute("orders", orders);
+        model.addAttribute("consumption", orderService.consumptionByOrder(orders));
         model.addAttribute("status", status == null || status.isBlank() ? "ALL" : status);
         model.addAttribute("customerId", customerId);
         model.addAttribute("statuses", OrderStatus.values());

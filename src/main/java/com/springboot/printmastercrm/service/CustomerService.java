@@ -4,7 +4,10 @@ import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.ExistsException;
 import com.springboot.printmastercrm.exception.NotFoundException;
-import com.springboot.printmastercrm.repository.*;
+import com.springboot.printmastercrm.repository.ClicheRepository;
+import com.springboot.printmastercrm.repository.CustomerRepository;
+import com.springboot.printmastercrm.repository.PostPressRepository;
+import com.springboot.printmastercrm.repository.PrintingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +22,7 @@ public class CustomerService {
     private final PostPressRepository postPressRepository;
     private final PrintingRepository printingRepository;
     private final ClicheRepository clicheRepository;
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
     public List<Customer> search(String query) {
         if (query == null || query.isBlank()) {
@@ -60,7 +63,7 @@ public class CustomerService {
     @Transactional
     public void delete(Long id) {
         Customer customer = get(id);
-        orderRepository.deleteByCustomerId(id);
+        orderService.deleteByCustomer(id);
         postPressRepository.deleteByCustomerId(id);
         printingRepository.deleteByCustomerId(id);
         clicheRepository.deleteByCustomerId(id);

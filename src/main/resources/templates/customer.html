@@ -117,6 +117,21 @@
         <form id="orderForm" th:action="@{/customers/{id}/orders(id=${customer.id})}" method="post">
             <label for="product">Детали заказа</label>
             <textarea id="product" name="product" required maxlength="255"></textarea>
+
+            <details style="margin-top:12px">
+                <summary>Расход материалов (спишется со склада)</summary>
+                <div th:each="entry : ${materialsByCategory}" th:unless="${#lists.isEmpty(entry.value)}">
+                    <h3 style="margin:12px 0 4px" th:text="${entry.key.label}">Раздел</h3>
+                    <div class="row" th:each="m : ${entry.value}">
+                        <div>
+                            <label th:text="${m.name} + (${m.sheetSize} != null ? ' (' + ${m.sheetSize} + ')' : '') + ' — на складе ' + ${m.stock.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label}"></label>
+                            <input type="number" th:name="'m_' + ${m.id}" step="any" min="0"
+                                   th:attr="step=${m.unit.whole} ? '1' : 'any'" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="muted" th:if="${#maps.isEmpty(materialsByCategory)}">Склад пуст</div>
+            </details>
             <p><button type="submit">Оформить заказ</button></p>
         </form>
 

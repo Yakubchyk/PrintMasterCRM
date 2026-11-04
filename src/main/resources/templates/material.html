@@ -9,15 +9,17 @@
     <div th:replace="~{_layout :: alerts}"></div>
 
     <section>
+        <div class="muted" th:text="${material.category.label}"></div>
+        <div th:if="${material.sheetSize != null}">Размер листа: <b th:text="${material.sheetSize}"></b></div>
         <div>Остаток: <b class="total" th:text="${material.stock.stripTrailingZeros().toPlainString()} + ' ' + ${material.unit.label}"></b></div>
         <div class="row" style="margin-top:14px">
             <form th:action="@{/materials/{id}/receive(id=${material.id})}" method="post" class="row" style="flex:1 1 320px">
-                <div><label>Приход</label><input type="number" name="quantity" step="any" min="0" required></div>
+                <div><label>Приход</label><input type="number" name="quantity" th:attr="step=${material.unit.whole} ? '1' : 'any'" min="0" required></div>
                 <div><label>Комментарий</label><input type="text" name="note" maxlength="255" placeholder="Поставка, накладная…"></div>
                 <div class="fixed"><button type="submit">Принять</button></div>
             </form>
             <form th:action="@{/materials/{id}/consume(id=${material.id})}" method="post" class="row" style="flex:1 1 320px">
-                <div><label>Расход</label><input type="number" name="quantity" step="any" min="0" required></div>
+                <div><label>Расход</label><input type="number" name="quantity" th:attr="step=${material.unit.whole} ? '1' : 'any'" min="0" required></div>
                 <div><label>Комментарий</label><input type="text" name="note" maxlength="255" placeholder="Заказ №…"></div>
                 <div class="fixed"><button type="submit" class="secondary">Списать</button></div>
             </form>
@@ -45,9 +47,8 @@
             <summary>Изменить материал</summary>
             <form th:action="@{/materials/{id}/update(id=${material.id})}" method="post" class="row">
                 <div><label>Название</label><input type="text" name="name" th:value="${material.name}" required></div>
-                <div><label>Единица</label>
-                    <select name="unit"><option th:each="u : ${units}" th:value="${u.name()}" th:text="${u.label}"
-                                                th:selected="${u == material.unit}"></option></select></div>
+                <div th:if="${material.category.name() == 'PAPER'}"><label>Размер листа</label>
+                    <input type="text" name="sheetSize" th:value="${material.sheetSize}" maxlength="50"></div>
                 <div><label>Примечание</label><input type="text" name="note" th:value="${material.note}" maxlength="255"></div>
                 <div class="fixed"><button type="submit">Сохранить</button></div>
             </form>
