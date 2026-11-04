@@ -66,8 +66,18 @@ public class Cliche {
         return addMargins(lengthCm);
     }
 
+    /** Площадь рабочего поля одного клише без полей, см². */
+    public BigDecimal getWorkAreaCm2() {
+        return widthCm.multiply(lengthCm);
+    }
+
+    /** Площадь одного клише с полями, см²: сначала к размерам прибавляются поля, затем они перемножаются. */
+    public BigDecimal getAreaCm2() {
+        return getTotalWidthCm().multiply(getTotalLengthCm());
+    }
+
     /** Площадь всех клише расчёта с учётом полей и количества, см². */
     public BigDecimal getTotalAreaCm2() {
-        return getTotalWidthCm().multiply(getTotalLengthCm()).multiply(BigDecimal.valueOf(quantity));
+        return getAreaCm2().multiply(BigDecimal.valueOf(quantity));
     }
 }

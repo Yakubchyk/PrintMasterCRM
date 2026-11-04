@@ -213,7 +213,7 @@ class OrderServiceTest {
         Order order = service.createOrder(customer, "Клише", null, null, List.of(3L), null);
 
         verify(materialService).reserve(eq(9L), argThat(q -> q.compareTo(new BigDecimal("84")) == 0));
-        assertThat(order.getDetails()).contains("общий размер 6 × 7 см").contains("поля 1 см");
+        assertThat(order.getDetails()).contains("= 20 см²").contains("общий размер 6 × 7 см = 42 см²").contains("поля 1 см");
     }
 
     @Test

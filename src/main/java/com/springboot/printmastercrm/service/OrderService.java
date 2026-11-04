@@ -259,17 +259,23 @@ public class OrderService {
     private static String describe(Cliche cl, LengthUnit lu) {
         String unit = " " + lu.getLabel();
         StringBuilder sb = new StringBuilder("Клише: ")
-                .append(lu.format(cl.getWidthCm())).append(" × ").append(lu.format(cl.getLengthCm())).append(unit);
+                .append(lu.format(cl.getWidthCm())).append(" × ").append(lu.format(cl.getLengthCm())).append(unit)
+                .append(" = ").append(area(cl.getWorkAreaCm2())).append(" см²");
         if (cl.getMarginCm() != null && cl.getMarginCm().signum() > 0) {
             sb.append(" + поля ").append(lu.format(cl.getMarginCm())).append(unit).append(" с каждой стороны");
         }
         sb.append(", общий размер ").append(lu.format(cl.getTotalWidthCm())).append(" × ")
                 .append(lu.format(cl.getTotalLengthCm())).append(unit)
+                .append(" = ").append(area(cl.getAreaCm2())).append(" см²")
                 .append(", ").append(cl.getQuantity()).append(" шт.");
         if (cl.getMaterial() != null) {
             sb.append(", ").append(cl.getMaterial().getName());
         }
         return sb.append(" — ").append(money(cl.getTotalPrice())).toString();
+    }
+
+    private static String area(BigDecimal cm2) {
+        return cm2.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
     }
 
     private static String money(BigDecimal value) {

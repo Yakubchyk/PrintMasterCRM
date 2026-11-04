@@ -53,14 +53,14 @@
             </form>
             <p class="muted" style="margin:4px 0">Цена считается по общему размеру (размер + поля). Материал резервируется на складе при оформлении заказа: общая площадь × количество.</p>
             <table th:unless="${#lists.isEmpty(clicheList)}">
-                <thead><tr><th></th><th>Дата</th><th>Размер</th><th>Общий размер</th><th>Материал</th><th class="num">Кол-во</th><th class="num">Стоимость</th><th></th></tr></thead>
+                <thead><tr><th></th><th>Дата</th><th>Размер</th><th>Общий размер с полями</th><th>Материал</th><th class="num">Кол-во</th><th class="num">Стоимость</th><th></th></tr></thead>
                 <tbody>
                 <tr th:each="p : ${clicheList}">
                     <td><input type="checkbox" name="clicheIds" th:value="${p.id}" form="orderForm"></td>
                     <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
-                    <td th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label}"></td>
-                    <td><b th:text="${lu.format(p.totalWidthCm)} + ' × ' + ${lu.format(p.totalLengthCm)} + ' ' + ${lu.label}"></b>
-                        <span class="muted" th:if="${p.marginCm.signum() > 0}" th:text="'(поля ' + ${lu.format(p.marginCm)} + ')'"></span></td>
+                    <td th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label} + ' = ' + ${p.workAreaCm2.stripTrailingZeros().toPlainString()} + ' см²'"></td>
+                    <td><b th:text="${lu.format(p.totalWidthCm)} + ' × ' + ${lu.format(p.totalLengthCm)} + ' ' + ${lu.label} + ' = ' + ${p.areaCm2.stripTrailingZeros().toPlainString()} + ' см²'"></b>
+                        <span class="muted" th:if="${p.marginCm.signum() > 0}" th:text="'(поля ' + ${lu.format(p.marginCm)} + ' ' + ${lu.label} + ' с каждой стороны)'"></span></td>
                     <td th:text="${p.material != null} ? ${p.material.name} : '—'"></td>
                     <td class="num" th:text="${p.quantity}"></td>
                     <td class="num total" th:text="${#numbers.formatDecimal(p.totalPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
