@@ -11,11 +11,13 @@
         <h2 th:text="${entry.key.label}">Раздел</h2>
         <div class="muted" th:if="${#lists.isEmpty(entry.value)}">Материалов нет</div>
         <table th:unless="${#lists.isEmpty(entry.value)}">
-            <thead><tr><th>Материал</th><th th:if="${entry.key.name() == 'PAPER'}">Размер листа</th><th class="num">На складе</th><th class="num">В резерве</th><th class="num">Свободно</th><th>Примечание</th><th></th></tr></thead>
+            <thead><tr><th>Материал</th><th>Размер листа</th><th class="num">На складе</th><th class="num">В резерве</th><th class="num">Свободно</th><th>Примечание</th><th></th></tr></thead>
             <tbody>
             <tr th:each="m : ${entry.value}">
                 <td><a th:href="@{/materials/{id}(id=${m.id})}" th:text="${m.name}">Материал</a></td>
                 <td th:if="${entry.key.name() == 'PAPER'}" th:text="${m.sheetSize}"></td>
+                <td th:unless="${entry.key.name() == 'PAPER'}"
+                    th:text="${m.sheetAreaCm2 != null} ? ${lu.format(m.sheetWidthCm)} + ' × ' + ${lu.format(m.sheetLengthCm)} + ' ' + ${lu.label} + ' (' + ${m.sheetAreaCm2.stripTrailingZeros().toPlainString()} + ' см²)' : '—'"></td>
                 <td class="num" th:text="${m.stock.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label}"></td>
                 <td class="num muted" th:text="${m.reserved.signum() > 0} ? ${m.reserved.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label} : '—'"></td>
                 <td class="num total" th:text="${m.available.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label}"></td>
@@ -41,7 +43,10 @@
                     </select></div>
                 <div><label>Название</label><input type="text" name="name" required></div>
                 <div id="sheetBox"><label>Размер листа</label><input type="text" name="sheetSize" maxlength="50" placeholder="например 70x100 см"></div>
-                <div><label>Начальный остаток</label><input type="number" name="stock" step="any" min="0" value="0"></div>
+                <div id="stockBox"><label>Начальный остаток, листов</label><input type="number" name="stock" step="1" min="0" value="0"></div>
+                <div class="plate"><label th:text="'Ширина листа, ' + ${lu.label}">Ширина</label><input type="number" name="width" step="any" min="0"></div>
+                <div class="plate"><label th:text="'Длина листа, ' + ${lu.label}">Длина</label><input type="number" name="length" step="any" min="0"></div>
+                <div class="plate"><label>Начальный остаток, листов</label><input type="number" name="sheets" step="1" min="0" value="0"></div>
                 <div><label>Примечание</label><input type="text" name="note" maxlength="255"></div>
                 <div class="fixed"><button type="submit">Добавить</button></div>
             </form>
@@ -50,8 +55,14 @@
 </main>
 <script>
     function toggleSheet() {
-        document.getElementById('sheetBox').style.display =
-            document.getElementById('category').value === 'PAPER' ? '' : 'none';
+        var paper = document.getElementById('category').value === 'PAPER';
+        document.getElementById('sheetBox').style.display = paper ? '' : 'none';
+        document.getElementById('stockBox').style.display = paper ? '' : 'none';
+        document.querySelectorAll('.plate').forEach(function (e) {
+            e.style.display = paper ? 'none' : '';
+            e.querySelectorAll('input').forEach(function (i) { i.disabled = paper; i.required = !paper && i.name !== 'sheets'; });
+        });
+        document.querySelectorAll('#stockBox input').forEach(function (i) { i.disabled = !paper; });
     }
     toggleSheet();
 </script>

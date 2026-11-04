@@ -36,11 +36,21 @@ public class Material {
     @Column(nullable = false)
     private BigDecimal stock = BigDecimal.ZERO;
 
+    /** Размер исходного листа магния/латуни, см. Для бумаги не используется (там sheetSize текстом). */
+    private BigDecimal sheetWidthCm;
+
+    private BigDecimal sheetLengthCm;
+
     /** Зарезервировано под оформленные, но ещё не отгруженные заказы. */
     @Column(nullable = false)
     private BigDecimal reserved = BigDecimal.ZERO;
 
     private String note;
+
+    /** Площадь одного исходного листа, см²; null, если размер не задан. */
+    public BigDecimal getSheetAreaCm2() {
+        return sheetWidthCm == null || sheetLengthCm == null ? null : sheetWidthCm.multiply(sheetLengthCm);
+    }
 
     /** Свободный остаток: на складе минус резерв. */
     public BigDecimal getAvailable() {

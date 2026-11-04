@@ -70,6 +70,73 @@ public class MaterialService {
         return material;
     }
 
+    /**
+     * Магний/латунь: задаётся размер исходного листа (см) и число листов; остаток считается в см²
+     * как ширина × длина × листы, чтобы заказы списывали площадь именно с него.
+     */
+    @Transactional
+    public Material createPlate(String name, MaterialCategory category, BigDecimal widthCm, BigDecimal lengthCm,
+                                BigDecimal sheets, String note) {
+        if (category == null || category == MaterialCategory.PAPER) {
+            throw new BusinessRuleException("Размер листа в см² задаётся только для магния и латуни");
+        }
+        requirePositiveSize(widthCm, lengthCm);
+        BigDecimal count = sheets == null ? BigDecimal.ZERO : sheets;
+        if (count.signum() < 0 || count.stripTrailingZeros().scale() > 0) {
+            throw new BusinessRuleException("Количество листов — целое число, не меньше нуля");
+        }
+        String trimmed = requireName(name);
+        if (materialRepository.existsByName(trimmed)) {
+            throw new ExistsException("Материал с таким названием уже есть");
+        }
+        Material material = new Material();
+        material.setName(trimmed);
+        material.setCategory(category);
+        material.setSheetWidthCm(widthCm);
+        material.setSheetLengthCm(lengthCm);
+        material.setNote(clean(note));
+        material = materialRepository.save(material);
+        if (count.signum() > 0) {
+            receive(material.getId(), widthCm.multiply(lengthCm).multiply(count),
+                    "Начальный остаток: " + count.stripTrailingZeros().toPlainString() + " лист.");
+        }
+        return material;
+    }
+
+    /** Приход целых листов магния/латуни: на склад добавляется площадь листов. */
+    @Transactional
+    public void receiveSheets(Long id, BigDecimal sheets, String note) {
+        Material material = get(id);
+        BigDecimal area = material.getSheetAreaCm2();
+        if (area == null) {
+            throw new BusinessRuleException("У материала «" + material.getName() + "» не задан размер листа");
+        }
+        if (sheets == null || sheets.signum() <= 0 || sheets.stripTrailingZeros().scale() > 0) {
+            throw new BusinessRuleException("Количество листов — целое число больше нуля");
+        }
+        String text = sheets.stripTrailingZeros().toPlainString() + " лист.";
+        receive(id, area.multiply(sheets), note == null || note.isBlank() ? text : text + ", " + note.trim());
+    }
+
+    /** Меняет размер исходного листа магния/латуни (остаток не пересчитывается). */
+    @Transactional
+    public Material updatePlateSize(Long id, BigDecimal widthCm, BigDecimal lengthCm) {
+        Material material = get(id);
+        if (material.getCategory() == MaterialCategory.PAPER) {
+            throw new BusinessRuleException("Для бумаги размер листа задаётся текстом");
+        }
+        requirePositiveSize(widthCm, lengthCm);
+        material.setSheetWidthCm(widthCm);
+        material.setSheetLengthCm(lengthCm);
+        return materialRepository.save(material);
+    }
+
+    private static void requirePositiveSize(BigDecimal widthCm, BigDecimal lengthCm) {
+        if (widthCm == null || lengthCm == null || widthCm.signum() <= 0 || lengthCm.signum() <= 0) {
+            throw new BusinessRuleException("Ширина и длина листа должны быть больше нуля");
+        }
+    }
+
     /** Раздел материала не меняется: от него зависит единица учёта. */
     @Transactional
     public Material update(Long id, String name, String sheetSize, String note) {

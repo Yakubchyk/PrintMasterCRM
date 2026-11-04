@@ -11,6 +11,9 @@
     <section>
         <div class="muted" th:text="${material.category.label}"></div>
         <div th:if="${material.sheetSize != null}">Размер листа: <b th:text="${material.sheetSize}"></b></div>
+        <div th:if="${material.sheetAreaCm2 != null}">Исходный лист: <b th:text="${lu.format(material.sheetWidthCm)} + ' × ' + ${lu.format(material.sheetLengthCm)} + ' ' + ${lu.label}"></b>
+            (<span th:text="${material.sheetAreaCm2.stripTrailingZeros().toPlainString()}"></span> см²)
+            · свободно ≈ <b th:text="${material.available.divide(material.sheetAreaCm2, 1, T(java.math.RoundingMode).DOWN).toPlainString()}"></b> листа</div>
         <div>На складе: <b class="total" th:text="${material.stock.stripTrailingZeros().toPlainString()} + ' ' + ${material.unit.label}"></b>
             · в резерве под заказы: <b th:text="${material.reserved.stripTrailingZeros().toPlainString()} + ' ' + ${material.unit.label}"></b>
             · свободно: <b th:text="${material.available.stripTrailingZeros().toPlainString()} + ' ' + ${material.unit.label}"></b></div>
@@ -19,6 +22,11 @@
                 <div><label>Приход</label><input type="number" name="quantity" th:attr="step=${material.unit.whole} ? '1' : 'any'" min="0" required></div>
                 <div><label>Комментарий</label><input type="text" name="note" maxlength="255" placeholder="Поставка, накладная…"></div>
                 <div class="fixed"><button type="submit">Принять</button></div>
+            </form>
+            <form th:if="${material.sheetAreaCm2 != null}" th:action="@{/materials/{id}/receive-sheets(id=${material.id})}" method="post" class="row" style="flex:1 1 320px">
+                <div><label>Приход листами</label><input type="number" name="sheets" step="1" min="1" required></div>
+                <div><label>Комментарий</label><input type="text" name="note" maxlength="255"></div>
+                <div class="fixed"><button type="submit">Принять листы</button></div>
             </form>
             <form th:action="@{/materials/{id}/consume(id=${material.id})}" method="post" class="row" style="flex:1 1 320px">
                 <div><label>Расход</label><input type="number" name="quantity" th:attr="step=${material.unit.whole} ? '1' : 'any'" min="0" required></div>
@@ -49,6 +57,10 @@
             <summary>Изменить материал</summary>
             <form th:action="@{/materials/{id}/update(id=${material.id})}" method="post" class="row">
                 <div><label>Название</label><input type="text" name="name" th:value="${material.name}" required></div>
+                <div th:if="${material.category.name() != 'PAPER'}"><label th:text="'Ширина листа, ' + ${lu.label}">Ширина</label>
+                    <input type="number" name="width" step="any" min="0" th:value="${material.sheetWidthCm != null} ? ${lu.format(material.sheetWidthCm)} : ''"></div>
+                <div th:if="${material.category.name() != 'PAPER'}"><label th:text="'Длина листа, ' + ${lu.label}">Длина</label>
+                    <input type="number" name="length" step="any" min="0" th:value="${material.sheetLengthCm != null} ? ${lu.format(material.sheetLengthCm)} : ''"></div>
                 <div th:if="${material.category.name() == 'PAPER'}"><label>Размер листа</label>
                     <input type="text" name="sheetSize" th:value="${material.sheetSize}" maxlength="50"></div>
                 <div><label>Примечание</label><input type="text" name="note" th:value="${material.note}" maxlength="255"></div>

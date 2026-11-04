@@ -262,4 +262,56 @@ class MaterialServiceTest {
         assertThatThrownBy(() -> service.reserve(1L, new BigDecimal("1.5")))
                 .isInstanceOf(BusinessRuleException.class);
     }
+
+    private Material savedPlate() {
+        Material[] created = new Material[1];
+        when(materialRepository.save(any(Material.class))).thenAnswer(i -> {
+            Material m = i.getArgument(0);
+            if (m.getId() == null) {
+                m.setId(3L);
+            }
+            created[0] = m;
+            return m;
+        });
+        when(materialRepository.findById(3L)).thenAnswer(i -> Optional.of(created[0]));
+        return null;
+    }
+
+    @Test
+    void plateStockIsSheetAreaTimesSheets() {
+        savedPlate();
+
+        Material magnesium = service.createPlate("Магний 7 мм", MaterialCategory.MAGNESIUM,
+                new BigDecimal("30"), new BigDecimal("40"), new BigDecimal("5"), null);
+
+        assertThat(magnesium.getSheetAreaCm2()).isEqualByComparingTo("1200");
+        assertThat(magnesium.getStock()).isEqualByComparingTo("6000");   // 30 × 40 × 5 листов
+        assertThat(magnesium.getUnit().getLabel()).isEqualTo("см²");
+        verify(movementRepository).save(any(StockMovement.class));
+    }
+
+    @Test
+    void plateRequiresSizeWholeSheetsAndNotPaper() {
+        assertThatThrownBy(() -> service.createPlate("M", MaterialCategory.BRASS, BigDecimal.ZERO,
+                new BigDecimal("40"), BigDecimal.ONE, null)).isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.createPlate("M", MaterialCategory.BRASS, new BigDecimal("30"),
+                new BigDecimal("40"), new BigDecimal("1.5"), null)).isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.createPlate("M", MaterialCategory.PAPER, new BigDecimal("30"),
+                new BigDecimal("40"), BigDecimal.ONE, null)).isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
+    void receiveSheetsAddsWholeSheetAreas() {
+        savedPlate();
+        Material brass = service.createPlate("Латунь", MaterialCategory.BRASS,
+                new BigDecimal("20"), new BigDecimal("10"), BigDecimal.ZERO, null);
+
+        service.receiveSheets(3L, new BigDecimal("3"), "Поставка");
+
+        assertThat(brass.getStock()).isEqualByComparingTo("600");
+        assertThatThrownBy(() -> service.receiveSheets(3L, new BigDecimal("0.5"), null))
+                .isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.receiveSheets(1L, BigDecimal.ONE, null))   // у бумаги нет площади листа
+                .isInstanceOf(BusinessRuleException.class);
+    }
 }
