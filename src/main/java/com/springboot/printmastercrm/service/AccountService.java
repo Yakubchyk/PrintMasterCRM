@@ -13,6 +13,7 @@ import com.springboot.printmastercrm.repository.PostPressRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -66,13 +67,15 @@ public class AccountService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<Account> byUsername = accountRepository.findByUsername(username);
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(username));
 
-        if (byUsername.isPresent()) {
-            return byUsername.get();
-        }
-
-        throw new UsernameNotFoundException(username);
+        // В сессии хранится лёгкий User, а не JPA-сущность: после входа Spring Security
+        // сам стирает из него пароль, и хэш не остаётся в памяти и в сессии.
+        return User.withUsername(account.getUsername())
+                .password(account.getPassword())
+                .authorities(account.getRoles())
+                .build();
     }
 
     /**
