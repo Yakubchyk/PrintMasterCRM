@@ -32,11 +32,14 @@ public class OrdersController {
 
     /** Без запроса — клиенты со сводкой по заказам; с запросом — найденные заказы целиком. */
     @GetMapping
-    public String list(@RequestParam(value = "q", required = false) String q, Model model) {
+    public String list(@RequestParam(value = "q", required = false) String q,
+                       @RequestParam(value = "view", required = false) String view, Model model) {
         String query = q == null ? "" : q.trim();
+        String mode = "all".equals(view) ? "all" : "clients";
         model.addAttribute("q", query);
+        model.addAttribute("view", mode);
         model.addAttribute("statuses", OrderStatus.values());
-        if (query.isEmpty()) {
+        if (query.isEmpty() && "clients".equals(mode)) {
             model.addAttribute("summaries", orderService.summaries(customerService.search(null)));
         } else {
             List<Order> found = orderService.search(query);
@@ -141,12 +144,19 @@ public class OrdersController {
     // ---- действия над заказом ----
 
     @PostMapping("/{id}/status")
-    public String setStatus(@PathVariable Long id, @RequestParam String status) {
+    public String setStatus(@PathVariable Long id, @RequestParam String status,
+                            @RequestParam(value = "back", required = false) String back,
+                            @RequestParam(value = "q", required = false) String q) {
         Order order = orderService.get(id);
         try {
             orderService.setStatus(id, OrderStatus.valueOf(status));
         } catch (IllegalArgumentException e) {
             throw new BusinessRuleException("Неизвестный статус заказа");
+        }
+        if ("all".equals(back)) {
+            // вернуться в список «все заказы» (с тем же поиском)
+            return "redirect:/orders?view=all" + (q == null || q.isBlank() ? ""
+                    : "&q=" + java.net.URLEncoder.encode(q.trim(), java.nio.charset.StandardCharsets.UTF_8));
         }
         return "redirect:/orders/customer/" + order.getCustomer().getId();
     }

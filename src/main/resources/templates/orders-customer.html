@@ -3,7 +3,7 @@
 <head th:replace="~{_layout :: head('Заказы: ' + ${customer.name})}"></head>
 <body>
 <nav th:replace="~{_layout :: nav('orders')}"></nav>
-<main>
+<main class="p-orders">
     <p><a th:href="@{/orders}">← Все клиенты</a></p>
     <h1 th:text="${customer.name}">Клиент</h1>
     <div th:replace="~{_layout :: alerts}"></div>

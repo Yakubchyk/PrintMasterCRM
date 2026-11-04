@@ -3,7 +3,7 @@
 <head th:replace="~{_layout :: head(${customer.name})}"></head>
 <body>
 <nav th:replace="~{_layout :: nav('customers')}"></nav>
-<main>
+<main class="p-customers">
     <p><a th:href="@{/customers}">← Все клиенты</a></p>
     <h1 th:text="${customer.name}">Клиент</h1>
     <div th:replace="~{_layout :: alerts}"></div>
@@ -41,7 +41,7 @@
                 <td th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></td>
                 <td th:text="${o.product}"></td>
                 <td class="num total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
-                <td th:text="${o.status.label}"></td>
+                <td><span class="badge" th:classappend="'st-' + ${o.status.name()}" th:text="${o.status.label}"></span></td>
             </tr>
             </tbody>
         </table>

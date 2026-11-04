@@ -3,32 +3,42 @@
 <head th:replace="~{_layout :: head('Заказы')}"></head>
 <body>
 <nav th:replace="~{_layout :: nav('orders')}"></nav>
-<main>
+<main class="p-orders">
     <h1>Заказы</h1>
     <div th:replace="~{_layout :: alerts}"></div>
 
     <section>
-        <form th:action="@{/orders}" method="get" class="row">
-            <div>
-                <label for="q">Поиск: клиент, номер заказа, описание, материал…</label>
-                <input type="search" id="q" name="q" th:value="${q}">
-            </div>
-            <div class="fixed">
-                <button type="submit">Найти</button>
-                <a class="button secondary" th:href="@{/orders}" th:if="${!q.isEmpty()}">Сбросить</a>
+        <div class="toolbar">
+            <form th:action="@{/orders}" method="get" class="search row">
+                <input type="hidden" name="view" th:value="${view}">
+                <div>
+                    <label for="q">Поиск: клиент, номер заказа, описание, материал…</label>
+                    <input type="search" id="q" name="q" th:value="${q}">
+                </div>
+                <div class="fixed">
+                    <button type="submit">Найти</button>
+                    <a class="button secondary" th:href="@{/orders(view=${view})}" th:if="${!q.isEmpty()}">Сбросить</a>
+                </div>
+            </form>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                <div class="seg" title="Как показывать заказы">
+                    <a th:href="@{/orders(view='clients')}" th:classappend="${view == 'clients' and q.isEmpty()} ? 'active'" data-view="clients">По клиентам</a>
+                    <a th:href="@{/orders(view='all')}" th:classappend="${view == 'all' or !q.isEmpty()} ? 'active'" data-view="all">Все заказы</a>
+                </div>
                 <a class="button" th:href="@{/orders/new}">+ Новый заказ</a>
             </div>
-        </form>
+        </div>
     </section>
 
-    <!-- без поискового запроса: клиенты -->
+    <!-- Вид «по клиентам» -->
     <section th:if="${summaries != null}">
         <div class="muted" th:if="${#lists.isEmpty(summaries)}">Клиентов нет. Сначала добавьте клиента в разделе «Клиенты».</div>
-        <table th:unless="${#lists.isEmpty(summaries)}">
+        <div class="table-wrap" th:unless="${#lists.isEmpty(summaries)}">
+        <table>
             <thead><tr><th>Клиент</th><th class="num">Заказов</th><th class="num">Не отгружено</th><th class="num">Сумма</th><th>Последний заказ</th></tr></thead>
             <tbody>
             <tr th:each="s : ${summaries}">
-                <td><a th:href="@{/orders/customer/{id}(id=${s.customer.id})}" th:text="${s.customer.name}">Клиент</a></td>
+                <td class="client-cell"><a th:href="@{/orders/customer/{id}(id=${s.customer.id})}" th:text="${s.customer.name}">Клиент</a></td>
                 <td class="num" th:text="${s.orderCount}"></td>
                 <td class="num" th:text="${s.activeCount}"></td>
                 <td class="num total" th:text="${#numbers.formatDecimal(s.total, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
@@ -36,15 +46,60 @@
             </tr>
             </tbody>
         </table>
+        </div>
     </section>
 
-    <!-- с запросом: найденные заказы -->
+    <!-- Вид «все заказы» и результаты поиска: заказы в строку, клиент в конце, статус сразу виден -->
     <section th:if="${orders != null}">
-        <h2 th:text="'Найдено заказов: ' + ${#lists.size(orders)}">Найдено</h2>
-        <th:block th:each="o : ${orders}">
-            <div th:replace="~{_order :: card(${o}, ${consumption.get(o.id)}, ${statuses}, true)}"></div>
-        </th:block>
+        <h2 th:if="${!q.isEmpty()}" th:text="'Найдено заказов: ' + ${#lists.size(orders)}">Найдено</h2>
+        <div class="muted" th:if="${#lists.isEmpty(orders)}">Заказов нет</div>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(orders)}">
+        <table>
+            <thead><tr><th>№</th><th>Дата</th><th>Описание</th><th class="num">Сумма</th><th>Статус</th><th>Клиент</th></tr></thead>
+            <tbody>
+            <tr th:each="o : ${orders}">
+                <td><a class="order-id" th:href="@{/orders/customer/{id}(id=${o.customer.id})} + '#order-' + ${o.id}" th:text="${o.id}"></a></td>
+                <td th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></td>
+                <td>
+                    <span th:text="${o.product}"></span>
+                    <div class="muted" th:if="${consumption.get(o.id) != null}" style="font-size:12.5px">
+                        <span th:each="u, st : ${consumption.get(o.id)}"
+                              th:text="${u.material.name} + ' — ' + ${u.quantity.stripTrailingZeros().toPlainString()} + ' ' + ${u.material.unit.label} + (${st.last} ? '' : '; ')"></span>
+                    </div>
+                </td>
+                <td class="num total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                <td>
+                    <form class="inline" method="post" th:action="@{/orders/{id}/status(id=${o.id})}">
+                        <input type="hidden" name="back" value="all">
+                        <input type="hidden" name="q" th:value="${q}">
+                        <select name="status" class="status" th:classappend="'st-' + ${o.status.name()}" onchange="this.form.submit()">
+                            <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
+                                    th:selected="${o.status == s}">Статус</option>
+                        </select>
+                    </form>
+                </td>
+                <td class="client-cell"><a th:href="@{/orders/customer/{id}(id=${o.customer.id})}" th:text="${o.customer.name}">Клиент</a></td>
+            </tr>
+            </tbody>
+        </table>
+        </div>
     </section>
 </main>
+<script>
+    // запоминаем выбранный вид (по клиентам / все заказы)
+    (function () {
+        try {
+            var params = new URLSearchParams(location.search);
+            var saved = localStorage.getItem('ordersView');
+            if (!params.has('view') && !params.has('q') && saved === 'all') {
+                location.replace(location.pathname + '?view=all');
+                return;
+            }
+            document.querySelectorAll('.seg a[data-view]').forEach(function (a) {
+                a.addEventListener('click', function () { localStorage.setItem('ordersView', a.getAttribute('data-view')); });
+            });
+        } catch (e) {}
+    })();
+</script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!-- Развёрнутая карточка заказа: card(order, список материалов заказа, статусы, показывать ли клиента) -->
-<article th:fragment="card(o, items, statuses, showCustomer)" class="order">
+<article th:fragment="card(o, items, statuses, showCustomer)" class="order" th:id="'order-' + ${o.id}">
     <header>
         <div>
             <b>Заказ №<span th:text="${o.id}"></span></b>
@@ -11,7 +11,7 @@
         </div>
         <div style="display:flex;gap:8px;align-items:center">
             <form class="inline" method="post" th:action="@{/orders/{id}/status(id=${o.id})}">
-                <select name="status" style="width:auto" onchange="this.form.submit()">
+                <select name="status" class="status" th:classappend="'st-' + ${o.status.name()}" onchange="this.form.submit()">
                     <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
                             th:selected="${o.status == s}">Статус</option>
                 </select>

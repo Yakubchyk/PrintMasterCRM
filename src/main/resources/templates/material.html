@@ -3,7 +3,7 @@
 <head th:replace="~{_layout :: head(${material.name})}"></head>
 <body>
 <nav th:replace="~{_layout :: nav('materials')}"></nav>
-<main>
+<main class="p-materials">
     <p><a th:href="@{/materials}">← Все материалы</a></p>
     <h1 th:text="${material.name}">Материал</h1>
     <div th:replace="~{_layout :: alerts}"></div>
