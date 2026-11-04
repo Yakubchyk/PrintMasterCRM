@@ -9,7 +9,7 @@
 </head>
 <body>
 <nav th:fragment="nav(active)" class="top">
-    <span class="brand">PrintMasterCRM</span>
+    <a class="brand" th:href="@{/}">PrintMasterCRM</a>
     <a th:href="@{/customers}" th:classappend="${active == 'customers'} ? 'active'">Клиенты</a>
     <a th:href="@{/orders}" th:classappend="${active == 'orders'} ? 'active'">Заказы</a>
     <a th:href="@{/materials}" th:classappend="${active == 'materials'} ? 'active'">Материалы</a>

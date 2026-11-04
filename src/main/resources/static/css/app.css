@@ -27,7 +27,7 @@ nav.top {
     padding: 0 16px;
     align-items: center;
 }
-nav.top .brand { color: #fff; font-weight: 600; margin-right: 18px; padding: 12px 0; }
+nav.top .brand, nav.top a.brand { color: #fff; font-weight: 600; margin-right: 18px; padding: 12px 0; text-decoration: none; }
 nav.top a { color: #c5ccd3; text-decoration: none; padding: 14px 12px; }
 nav.top a:hover { color: #fff; }
 nav.top a.active { color: #fff; box-shadow: inset 0 -3px 0 var(--accent); }
@@ -103,5 +103,24 @@ details[open] summary { margin-bottom: 12px; }
 .order .lines { white-space: pre-line; margin: 8px 0; }
 .order .costs { display: flex; flex-wrap: wrap; gap: 16px; }
 .works label { display: inline-flex; gap: 6px; align-items: center; margin-right: 18px; font-size: 1.05em; }
-@media (prefers-color-scheme: dark) { .order { background: #1c1f24; border-color: #3a3f47; } }
 [hidden] { display: none !important; }
+
+/* Главная: плитки-ярлыки */
+.home { text-align: center; padding-top: 28px; }
+.home h1 { font-size: 28px; margin-bottom: 4px; }
+.home .lead { color: var(--muted); margin: 0 0 32px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, 190px); gap: 22px; justify-content: center; }
+.tile { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 26px 14px 22px;
+        background: var(--card); border: 1px solid var(--line); border-radius: 18px; color: var(--text);
+        text-decoration: none; box-shadow: 0 2px 6px rgba(31, 41, 51, .06);
+        transition: transform .15s, box-shadow .15s, border-color .15s; }
+.tile:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(31, 41, 51, .14); border-color: var(--accent); }
+.tile .icon { width: 92px; height: 92px; border-radius: 24px; display: grid; place-items: center; color: #fff; }
+.tile .icon svg { width: 52px; height: 52px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tile .title { font-weight: 600; font-size: 17px; }
+.tile .sub { color: var(--muted); font-size: 13px; margin-top: -8px; }
+.i-blue   { background: linear-gradient(135deg, #4f8bff, #2f6fed); }
+.i-green  { background: linear-gradient(135deg, #3fc08a, #1f9d6b); }
+.i-orange { background: linear-gradient(135deg, #ffb457, #f08a1c); }
+.i-purple { background: linear-gradient(135deg, #a78bfa, #7c5ce0); }
+.i-grey   { background: linear-gradient(135deg, #8a97a6, #5f6c7b); }
