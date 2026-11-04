@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
-<head th:insert="~{_bootstrap::link}">
+<head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <title>Новый клиент</title>
+    <th:block th:insert="~{_bootstrap::head-assets}"></th:block>
 </head>
 
 <body>
-<header th:insert="~{_header.html}"></header>
+<header th:replace="~{_header :: nav}"></header>
 
 <div class="container-fluid mt-2">
     <div class="row align-items-start">
@@ -20,6 +21,7 @@
 
         <div class="col-5">
             <h6>Новый клиент</h6>
+            <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}">Ошибка</div>
 
             <form th:action="@{/profile/register}" th:object="${customer}" method="post">
                 <div class="mb-3">
@@ -43,7 +45,7 @@
         <div class="col-3"></div>
 
 
-        <th:block th:insert="~{_bootstrap::script}"></th:block>
+        <th:block th:insert="~{_bootstrap::scripts}"></th:block>
     </div>
 </div>
 </body>

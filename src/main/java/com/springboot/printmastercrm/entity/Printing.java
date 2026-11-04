@@ -24,6 +24,6 @@ public class Printing {
     private String papier; // плотность бумаги. 90g/m2 - 350g/m2
     private String colour; //печать с одной стороны или с двух. 4+0, 4+4
     private Integer quantity; //тираж
-    private double totalCost;
+    private BigDecimal totalCost;
 
 }

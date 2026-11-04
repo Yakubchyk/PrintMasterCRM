@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @Table(name = "customer_orders")
 public class Order {
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private OrderStatus status;
     
 
