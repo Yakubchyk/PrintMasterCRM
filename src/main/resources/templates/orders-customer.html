@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{_layout :: head('Заказы: ' + ${customer.name})}"></head>
+<body>
+<nav th:replace="~{_layout :: nav('orders')}"></nav>
+<main>
+    <p><a th:href="@{/orders}">← Все клиенты</a></p>
+    <h1 th:text="${customer.name}">Клиент</h1>
+    <div th:replace="~{_layout :: alerts}"></div>
+
+    <section>
+        <div>
+            <span th:text="${customer.phoneNumber}"></span> · <span th:text="${customer.email}"></span>
+            <span th:if="${!customer.addressLine.isEmpty()}" th:text="' · ' + ${customer.addressLine}"></span>
+        </div>
+        <p style="margin-bottom:0">
+            <a class="button" th:href="@{/orders/new(customerId=${customer.id})}">+ Новый заказ</a>
+            <a class="button secondary" th:href="@{/customers/{id}(id=${customer.id})}">Карточка клиента</a>
+        </p>
+    </section>
+
+    <section>
+        <div class="muted" th:if="${#lists.isEmpty(orders)}">Заказов пока нет</div>
+        <th:block th:each="o : ${orders}">
+            <div th:replace="~{_order :: card(${o}, ${consumption.get(o.id)}, ${statuses}, false)}"></div>
+        </th:block>
+    </section>
+</main>
+</body>
+</html>

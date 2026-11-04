@@ -33,4 +33,8 @@ public class OrderMaterial {
 
     @Column(nullable = false)
     private BigDecimal quantity;
+
+    /** false — материал только зарезервирован под заказ; true — списан со склада при отгрузке. */
+    @Column(nullable = false)
+    private boolean writtenOff = false;
 }

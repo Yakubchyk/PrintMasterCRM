@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Развёрнутая карточка заказа: card(order, список материалов заказа, статусы, показывать ли клиента) -->
+<article th:fragment="card(o, items, statuses, showCustomer)" class="order">
+    <header>
+        <div>
+            <b>Заказ №<span th:text="${o.id}"></span></b>
+            <span class="muted" th:text="' от ' + ${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></span>
+            <span th:if="${showCustomer}"> · <a th:href="@{/orders/customer/{id}(id=${o.customer.id})}" th:text="${o.customer.name}">Клиент</a></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+            <form class="inline" method="post" th:action="@{/orders/{id}/status(id=${o.id})}">
+                <select name="status" style="width:auto" onchange="this.form.submit()">
+                    <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
+                            th:selected="${o.status == s}">Статус</option>
+                </select>
+            </form>
+            <form class="inline" method="post" th:action="@{/orders/{id}/delete(id=${o.id})}"
+                  onsubmit="return confirm('Удалить заказ? Резерв снимется, а уже списанные материалы вернутся на склад.')">
+                <button type="submit" class="danger small" title="Удалить заказ">✕</button>
+            </form>
+        </div>
+    </header>
+    <div><b th:text="${o.product}"></b></div>
+    <div class="lines" th:if="${o.details != null}" th:text="${o.details}"></div>
+    <div class="costs">
+        <span th:if="${o.clichePrice.signum() > 0}">Клише: <b th:text="${#numbers.formatDecimal(o.clichePrice, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
+        <span th:if="${o.postpressPrice.signum() > 0}">Тиснение: <b th:text="${#numbers.formatDecimal(o.postpressPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
+        <span th:if="${o.printingPrice.signum() > 0}">Печать: <b th:text="${#numbers.formatDecimal(o.printingPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
+        <span>Итого: <b class="total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
+    </div>
+    <div class="muted" th:if="${items != null}" style="margin-top:6px">
+        Материалы:
+        <span th:each="u, st : ${items}"
+              th:text="${u.material.name} + ' — ' + ${u.quantity.stripTrailingZeros().toPlainString()} + ' ' + ${u.material.unit.label} + ' (' + (${u.writtenOff} ? 'списано' : 'в резерве') + ')' + (${st.last} ? '' : '; ')"></span>
+    </div>
+</article>
+</body>
+</html>

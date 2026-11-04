@@ -59,6 +59,20 @@ public class CustomerService {
         return customerRepository.save(existing);
     }
 
+    @Transactional
+    public Customer saveAddress(Long id, String postalCode, String city, String street, String houseNumber) {
+        Customer customer = get(id);
+        customer.setPostalCode(blankToNull(postalCode));
+        customer.setCity(blankToNull(city));
+        customer.setStreet(blankToNull(street));
+        customer.setHouseNumber(blankToNull(houseNumber));
+        return customerRepository.save(customer);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     /** Удаляет клиента вместе с его заказами и расчётами. */
     @Transactional
     public void delete(Long id) {

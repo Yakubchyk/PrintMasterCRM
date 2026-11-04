@@ -8,49 +8,42 @@
     <div th:replace="~{_layout :: alerts}"></div>
 
     <section>
-        <div class="filters">
-            <a th:href="@{/orders(customerId=${customerId})}" th:classappend="${status == 'ALL'} ? 'active'">Все</a>
-            <a th:each="s : ${statuses}" th:href="@{/orders(status=${s.name()}, customerId=${customerId})}"
-               th:classappend="${status == s.name()} ? 'active'" th:text="${s.label}">Статус</a>
-            <a th:if="${customerId != null}" th:href="@{/orders(status=${status})}" class="muted">× снять фильтр по клиенту</a>
-        </div>
+        <form th:action="@{/orders}" method="get" class="row">
+            <div>
+                <label for="q">Поиск: клиент, номер заказа, описание, материал…</label>
+                <input type="search" id="q" name="q" th:value="${q}">
+            </div>
+            <div class="fixed">
+                <button type="submit">Найти</button>
+                <a class="button secondary" th:href="@{/orders}" th:if="${!q.isEmpty()}">Сбросить</a>
+                <a class="button" th:href="@{/orders/new}">+ Новый заказ</a>
+            </div>
+        </form>
+    </section>
 
-        <div class="muted" th:if="${#lists.isEmpty(orders)}" style="margin-top:12px">Заказов нет</div>
-        <table th:unless="${#lists.isEmpty(orders)}">
-            <thead>
-            <tr><th>№</th><th>Дата</th><th>Клиент</th><th>Описание</th><th class="num">Сумма</th><th>Статус</th><th></th></tr>
-            </thead>
+    <!-- без поискового запроса: клиенты -->
+    <section th:if="${summaries != null}">
+        <div class="muted" th:if="${#lists.isEmpty(summaries)}">Клиентов нет. Сначала добавьте клиента в разделе «Клиенты».</div>
+        <table th:unless="${#lists.isEmpty(summaries)}">
+            <thead><tr><th>Клиент</th><th class="num">Заказов</th><th class="num">Не отгружено</th><th class="num">Сумма</th><th>Последний заказ</th></tr></thead>
             <tbody>
-            <tr th:each="o : ${orders}">
-                <td th:text="${o.id}"></td>
-                <td th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></td>
-                <td><a th:href="@{/customers/{id}(id=${o.customer.id})}" th:text="${o.customer.name}">Клиент</a></td>
-                <td>
-                    <span th:text="${o.product}"></span>
-                    <div class="muted" th:if="${consumption.get(o.id) != null}">
-                        Списано:
-                        <span th:each="u, st : ${consumption.get(o.id)}"
-                              th:text="${u.material.name} + ' — ' + ${u.quantity.stripTrailingZeros().toPlainString()} + ' ' + ${u.material.unit.label} + (${st.last} ? '' : '; ')"></span>
-                    </div>
-                </td>
-                <td class="num total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
-                <td>
-                    <form class="inline" method="post" th:action="@{/orders/{id}/status(id=${o.id})}">
-                        <select name="status" style="width:auto" onchange="this.form.submit()">
-                            <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
-                                    th:selected="${o.status == s}">Статус</option>
-                        </select>
-                    </form>
-                </td>
-                <td class="num">
-                    <form class="inline" method="post" th:action="@{/orders/{id}/delete(id=${o.id})}"
-                          onsubmit="return confirm('Удалить заказ? Списанные материалы вернутся на склад.')">
-                        <button type="submit" class="danger small" title="Удалить заказ">✕</button>
-                    </form>
-                </td>
+            <tr th:each="s : ${summaries}">
+                <td><a th:href="@{/orders/customer/{id}(id=${s.customer.id})}" th:text="${s.customer.name}">Клиент</a></td>
+                <td class="num" th:text="${s.orderCount}"></td>
+                <td class="num" th:text="${s.activeCount}"></td>
+                <td class="num total" th:text="${#numbers.formatDecimal(s.total, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                <td class="muted" th:text="${s.lastOrderAt != null} ? ${#temporals.format(s.lastOrderAt, 'dd.MM.yyyy')} : '—'"></td>
             </tr>
             </tbody>
         </table>
+    </section>
+
+    <!-- с запросом: найденные заказы -->
+    <section th:if="${orders != null}">
+        <h2 th:text="'Найдено заказов: ' + ${#lists.size(orders)}">Найдено</h2>
+        <th:block th:each="o : ${orders}">
+            <div th:replace="~{_order :: card(${o}, ${consumption.get(o.id)}, ${statuses}, true)}"></div>
+        </th:block>
     </section>
 </main>
 </body>

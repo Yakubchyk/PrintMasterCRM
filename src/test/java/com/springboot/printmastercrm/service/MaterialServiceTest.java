@@ -6,6 +6,7 @@ import com.springboot.printmastercrm.entity.MovementType;
 import com.springboot.printmastercrm.entity.StockMovement;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.ExistsException;
+import com.springboot.printmastercrm.repository.ClicheRepository;
 import com.springboot.printmastercrm.repository.MaterialRepository;
 import com.springboot.printmastercrm.repository.OrderMaterialRepository;
 import com.springboot.printmastercrm.repository.StockMovementRepository;
@@ -37,6 +38,8 @@ class MaterialServiceTest {
     private StockMovementRepository movementRepository;
     @Mock
     private OrderMaterialRepository orderMaterialRepository;
+    @Mock
+    private ClicheRepository clicheRepository;
     @InjectMocks
     private MaterialService service;
 
@@ -186,7 +189,77 @@ class MaterialServiceTest {
     void deleteRemovesHistoryFirst() {
         service.delete(1L);
 
+        verify(clicheRepository).detachMaterial(1L);
         verify(movementRepository).deleteByMaterialId(1L);
         verify(materialRepository).delete(foil);
+    }
+
+    @Test
+    void reserveKeepsStockButReducesAvailable() {
+        service.reserve(1L, new BigDecimal("4"));
+
+        assertThat(foil.getStock()).isEqualByComparingTo("10");
+        assertThat(foil.getReserved()).isEqualByComparingTo("4");
+        assertThat(foil.getAvailable()).isEqualByComparingTo("6");
+        verify(movementRepository, never()).save(any());
+    }
+
+    @Test
+    void reserveMoreThanAvailableIsRejected() {
+        service.reserve(1L, new BigDecimal("8"));
+
+        assertThatThrownBy(() -> service.reserve(1L, new BigDecimal("3")))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("свободно 2");
+        assertThat(foil.getReserved()).isEqualByComparingTo("8");
+    }
+
+    @Test
+    void reservedMaterialCannotBeWrittenOffManually() {
+        service.reserve(1L, new BigDecimal("8"));
+
+        assertThatThrownBy(() -> service.consume(1L, new BigDecimal("3"), null))
+                .isInstanceOf(BusinessRuleException.class);
+        service.consume(1L, new BigDecimal("2"), null);
+        assertThat(foil.getStock()).isEqualByComparingTo("8");
+    }
+
+    @Test
+    void releaseReturnsReserveAndNeverGoesBelowZero() {
+        service.reserve(1L, new BigDecimal("3"));
+
+        service.release(1L, new BigDecimal("5"));
+
+        assertThat(foil.getReserved()).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void shipTurnsReserveIntoWriteOffWithMovement() {
+        service.reserve(1L, new BigDecimal("4"));
+
+        service.ship(1L, new BigDecimal("4"), "Отгрузка");
+
+        assertThat(foil.getStock()).isEqualByComparingTo("6");
+        assertThat(foil.getReserved()).isEqualByComparingTo("0");
+        ArgumentCaptor<StockMovement> captor = ArgumentCaptor.forClass(StockMovement.class);
+        verify(movementRepository).save(captor.capture());
+        assertThat(captor.getValue().getMovementType()).isEqualTo(MovementType.OUT);
+    }
+
+    @Test
+    void unshipReturnsMaterialToStockAndReserve() {
+        service.reserve(1L, new BigDecimal("4"));
+        service.ship(1L, new BigDecimal("4"), null);
+
+        service.unship(1L, new BigDecimal("4"), null);
+
+        assertThat(foil.getStock()).isEqualByComparingTo("10");
+        assertThat(foil.getReserved()).isEqualByComparingTo("4");
+    }
+
+    @Test
+    void reservedSheetsMustBeWhole() {
+        assertThatThrownBy(() -> service.reserve(1L, new BigDecimal("1.5")))
+                .isInstanceOf(BusinessRuleException.class);
     }
 }

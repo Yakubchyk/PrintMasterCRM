@@ -43,6 +43,10 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal totalCost = BigDecimal.ZERO;
 
+    /** Состав заказа: работы и расчёты на момент оформления, по строке на работу. */
+    @Column(length = 4000)
+    private String details;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false)

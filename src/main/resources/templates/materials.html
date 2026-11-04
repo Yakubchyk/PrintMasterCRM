@@ -11,13 +11,21 @@
         <h2 th:text="${entry.key.label}">Раздел</h2>
         <div class="muted" th:if="${#lists.isEmpty(entry.value)}">Материалов нет</div>
         <table th:unless="${#lists.isEmpty(entry.value)}">
-            <thead><tr><th>Материал</th><th th:if="${entry.key.name() == 'PAPER'}">Размер листа</th><th class="num">Остаток</th><th>Примечание</th></tr></thead>
+            <thead><tr><th>Материал</th><th th:if="${entry.key.name() == 'PAPER'}">Размер листа</th><th class="num">На складе</th><th class="num">В резерве</th><th class="num">Свободно</th><th>Примечание</th><th></th></tr></thead>
             <tbody>
             <tr th:each="m : ${entry.value}">
                 <td><a th:href="@{/materials/{id}(id=${m.id})}" th:text="${m.name}">Материал</a></td>
                 <td th:if="${entry.key.name() == 'PAPER'}" th:text="${m.sheetSize}"></td>
-                <td class="num total" th:text="${m.stock.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label}"></td>
+                <td class="num" th:text="${m.stock.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label}"></td>
+                <td class="num muted" th:text="${m.reserved.signum() > 0} ? ${m.reserved.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label} : '—'"></td>
+                <td class="num total" th:text="${m.available.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label}"></td>
                 <td class="muted" th:text="${m.note}"></td>
+                <td class="num">
+                    <form class="inline" method="post" th:action="@{/materials/{id}/delete(id=${m.id})}"
+                          onsubmit="return confirm('Удалить материал вместе с историей движения?')">
+                        <button type="submit" class="danger small" title="Удалить материал">Удалить</button>
+                    </form>
+                </td>
             </tr>
             </tbody>
         </table>

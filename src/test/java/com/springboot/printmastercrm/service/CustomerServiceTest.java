@@ -127,4 +127,17 @@ class CustomerServiceTest {
         service.search("  ");
         verify(customerRepository).findAllByOrderByNameAsc();
     }
+
+    @Test
+    void saveAddressStoresPartsAndTurnsBlanksIntoNull() {
+        Customer existing = Customer.builder().id(10L).build();
+        when(customerRepository.findById(10L)).thenReturn(Optional.of(existing));
+        when(customerRepository.save(any(Customer.class))).thenAnswer(i -> i.getArgument(0));
+
+        Customer saved = service.saveAddress(10L, " 24787 ", "Fockbek", " Hauptstr. ", "  ");
+
+        assertThat(saved.getPostalCode()).isEqualTo("24787");
+        assertThat(saved.getHouseNumber()).isNull();
+        assertThat(saved.getAddressLine()).isEqualTo("Hauptstr., 24787 Fockbek");
+    }
 }

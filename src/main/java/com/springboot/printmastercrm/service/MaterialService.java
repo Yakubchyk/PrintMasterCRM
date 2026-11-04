@@ -7,6 +7,7 @@ import com.springboot.printmastercrm.entity.StockMovement;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.ExistsException;
 import com.springboot.printmastercrm.exception.NotFoundException;
+import com.springboot.printmastercrm.repository.ClicheRepository;
 import com.springboot.printmastercrm.repository.MaterialRepository;
 import com.springboot.printmastercrm.repository.OrderMaterialRepository;
 import com.springboot.printmastercrm.repository.StockMovementRepository;
@@ -25,6 +26,7 @@ public class MaterialService {
     private final MaterialRepository materialRepository;
     private final StockMovementRepository movementRepository;
     private final OrderMaterialRepository orderMaterialRepository;
+    private final ClicheRepository clicheRepository;
 
     public List<Material> findAll() {
         return materialRepository.findAllByOrderByNameAsc();
@@ -100,34 +102,95 @@ public class MaterialService {
             throw new BusinessRuleException("Материал «" + material.getName()
                     + "» списывался на заказы, удалить его нельзя");
         }
+        clicheRepository.detachMaterial(id);
         movementRepository.deleteByMaterialId(id);
         materialRepository.delete(material);
     }
 
-    private void move(Long id, MovementType type, BigDecimal quantity, String note) {
-        if (quantity == null || quantity.signum() <= 0) {
-            throw new BusinessRuleException("Количество должно быть больше нуля");
-        }
+    /** Резервирует материал под заказ: остаток не меняется, но свободного становится меньше. */
+    @Transactional
+    public void reserve(Long id, BigDecimal quantity) {
         Material material = get(id);
-        if (material.getUnit().isWhole() && quantity.stripTrailingZeros().scale() > 0) {
-            throw new BusinessRuleException("«" + material.getName() + "»: листы указываются целым числом");
+        BigDecimal amount = normalize(material, quantity);
+        if (amount.compareTo(material.getAvailable()) > 0) {
+            throw notEnough(material);
         }
+        material.setReserved(material.getReserved().add(amount));
+        materialRepository.save(material);
+    }
+
+    /** Снимает резерв (заказ удалён до отгрузки). */
+    @Transactional
+    public void release(Long id, BigDecimal quantity) {
+        Material material = get(id);
         BigDecimal amount = quantity.setScale(3, RoundingMode.HALF_UP);
+        material.setReserved(material.getReserved().subtract(amount).max(BigDecimal.ZERO));
+        materialRepository.save(material);
+    }
+
+    /** Отгрузка: резерв превращается в списание со склада. */
+    @Transactional
+    public void ship(Long id, BigDecimal quantity, String note) {
+        Material material = get(id);
+        BigDecimal amount = quantity.setScale(3, RoundingMode.HALF_UP);
+        if (amount.compareTo(material.getStock()) > 0) {
+            throw notEnough(material);
+        }
+        material.setReserved(material.getReserved().subtract(amount).max(BigDecimal.ZERO));
+        material.setStock(material.getStock().subtract(amount));
+        materialRepository.save(material);
+        writeMovement(material, MovementType.OUT, amount, note);
+    }
+
+    /** Отмена отгрузки: материал возвращается на склад и снова в резерве заказа. */
+    @Transactional
+    public void unship(Long id, BigDecimal quantity, String note) {
+        Material material = get(id);
+        BigDecimal amount = quantity.setScale(3, RoundingMode.HALF_UP);
+        material.setStock(material.getStock().add(amount));
+        material.setReserved(material.getReserved().add(amount));
+        materialRepository.save(material);
+        writeMovement(material, MovementType.IN, amount, note);
+    }
+
+    private void move(Long id, MovementType type, BigDecimal quantity, String note) {
+        Material material = get(id);
+        BigDecimal amount = normalize(material, quantity);
         BigDecimal newStock = type == MovementType.IN ? material.getStock().add(amount) : material.getStock().subtract(amount);
-        if (newStock.signum() < 0) {
-            throw new BusinessRuleException("На складе недостаточно материала «" + material.getName()
-                    + "»: осталось " + material.getStock().stripTrailingZeros().toPlainString()
-                    + " " + material.getUnit().getLabel());
+        // списать можно только свободный остаток: зарезервированное принадлежит заказам
+        if (newStock.signum() < 0 || newStock.compareTo(material.getReserved()) < 0) {
+            throw notEnough(material);
         }
         material.setStock(newStock);
         materialRepository.save(material);
+        writeMovement(material, type, amount, note);
+    }
 
+    private void writeMovement(Material material, MovementType type, BigDecimal amount, String note) {
         StockMovement movement = new StockMovement();
         movement.setMaterial(material);
         movement.setMovementType(type);
         movement.setQuantity(amount);
         movement.setNote(clean(note));
         movementRepository.save(movement);
+    }
+
+    private static BigDecimal normalize(Material material, BigDecimal quantity) {
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Количество должно быть больше нуля");
+        }
+        if (material.getUnit().isWhole() && quantity.stripTrailingZeros().scale() > 0) {
+            throw new BusinessRuleException("«" + material.getName() + "»: листы указываются целым числом");
+        }
+        return quantity.setScale(3, RoundingMode.HALF_UP);
+    }
+
+    private static BusinessRuleException notEnough(Material material) {
+        return new BusinessRuleException("На складе недостаточно материала «" + material.getName()
+                + "»: свободно " + material.getAvailable().stripTrailingZeros().toPlainString()
+                + " " + material.getUnit().getLabel()
+                + (material.getReserved().signum() > 0
+                ? " (в резерве " + material.getReserved().stripTrailingZeros().toPlainString() + ")" : ""));
     }
 
     private static String sheetSizeFor(MaterialCategory category, String sheetSize) {

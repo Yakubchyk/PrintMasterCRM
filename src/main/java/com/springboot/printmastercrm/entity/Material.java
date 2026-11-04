@@ -36,7 +36,16 @@ public class Material {
     @Column(nullable = false)
     private BigDecimal stock = BigDecimal.ZERO;
 
+    /** Зарезервировано под оформленные, но ещё не отгруженные заказы. */
+    @Column(nullable = false)
+    private BigDecimal reserved = BigDecimal.ZERO;
+
     private String note;
+
+    /** Свободный остаток: на складе минус резерв. */
+    public BigDecimal getAvailable() {
+        return stock.subtract(reserved);
+    }
 
     /** Единица учёта определяется разделом. В базе не хранится. */
     public StockUnit getUnit() {

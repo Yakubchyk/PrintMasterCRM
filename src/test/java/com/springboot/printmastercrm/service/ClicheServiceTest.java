@@ -72,4 +72,29 @@ class ClicheServiceTest {
         assertThatThrownBy(() -> service.create(customer, d("0"), d("10"), 1)).isInstanceOf(BusinessRuleException.class);
         assertThatThrownBy(() -> service.create(customer, d("10"), d("10"), 0)).isInstanceOf(BusinessRuleException.class);
     }
+
+    @Test
+    void marginsAreAddedOnEverySideAndPriceUsesTotalSize() {
+        when(settingService.getSettings()).thenReturn(TestSettings.standard());
+        when(clicheRepository.save(any(Cliche.class))).thenAnswer(i -> i.getArgument(0));
+
+        // рабочее поле 8x8, поля по 1: общий размер 10x10 = 100 см² * 0,5 = 50; 2 шт: 50*2*1,25 = 125,00
+        Cliche saved = service.create(Customer.builder().id(1L).build(), d("8"), d("8"), d("1"), 2, null);
+
+        assertThat(saved.getTotalWidthCm()).isEqualByComparingTo("10");
+        assertThat(saved.getTotalLengthCm()).isEqualByComparingTo("10");
+        assertThat(saved.getTotalAreaCm2()).isEqualByComparingTo("200");
+        assertThat(saved.getTotalPrice()).isEqualByComparingTo("125.00");
+    }
+
+    @Test
+    void negativeMarginAndPaperMaterialAreRejected() {
+        Customer customer = Customer.builder().id(1L).build();
+        com.springboot.printmastercrm.entity.Material paper = new com.springboot.printmastercrm.entity.Material();
+
+        assertThatThrownBy(() -> service.create(customer, d("5"), d("5"), d("-1"), 1, null))
+                .isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.create(customer, d("5"), d("5"), d("0"), 1, paper))
+                .isInstanceOf(BusinessRuleException.class);
+    }
 }

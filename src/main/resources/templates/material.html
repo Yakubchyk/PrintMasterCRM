@@ -11,7 +11,9 @@
     <section>
         <div class="muted" th:text="${material.category.label}"></div>
         <div th:if="${material.sheetSize != null}">Размер листа: <b th:text="${material.sheetSize}"></b></div>
-        <div>Остаток: <b class="total" th:text="${material.stock.stripTrailingZeros().toPlainString()} + ' ' + ${material.unit.label}"></b></div>
+        <div>На складе: <b class="total" th:text="${material.stock.stripTrailingZeros().toPlainString()} + ' ' + ${material.unit.label}"></b>
+            · в резерве под заказы: <b th:text="${material.reserved.stripTrailingZeros().toPlainString()} + ' ' + ${material.unit.label}"></b>
+            · свободно: <b th:text="${material.available.stripTrailingZeros().toPlainString()} + ' ' + ${material.unit.label}"></b></div>
         <div class="row" style="margin-top:14px">
             <form th:action="@{/materials/{id}/receive(id=${material.id})}" method="post" class="row" style="flex:1 1 320px">
                 <div><label>Приход</label><input type="number" name="quantity" th:attr="step=${material.unit.whole} ? '1' : 'any'" min="0" required></div>
@@ -52,11 +54,15 @@
                 <div><label>Примечание</label><input type="text" name="note" th:value="${material.note}" maxlength="255"></div>
                 <div class="fixed"><button type="submit">Сохранить</button></div>
             </form>
-            <form th:action="@{/materials/{id}/delete(id=${material.id})}" method="post" style="margin-top:12px"
-                  onsubmit="return confirm('Удалить материал вместе с историей движения?')">
-                <button type="submit" class="danger">Удалить материал</button>
-            </form>
+
         </details>
+    </section>
+    <section>
+        <form th:action="@{/materials/{id}/delete(id=${material.id})}" method="post"
+              onsubmit="return confirm('Удалить материал вместе с историей движения?')">
+            <button type="submit" class="danger">Удалить материал</button>
+            <span class="muted"> — если он внесён по ошибке. Материал, который уже есть в заказах, удалить нельзя.</span>
+        </form>
     </section>
 </main>
 </body>

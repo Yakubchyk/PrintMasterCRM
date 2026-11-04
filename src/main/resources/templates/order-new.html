@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{_layout :: head('Новый заказ')}"></head>
+<body>
+<nav th:replace="~{_layout :: nav('orders')}"></nav>
+<main>
+    <h1>Новый заказ</h1>
+    <div th:replace="~{_layout :: alerts}"></div>
+
+    <!-- шаг 0: выбрать клиента -->
+    <section th:if="${customer == null}">
+        <form th:action="@{/orders/new}" method="get" class="row">
+            <div><label for="customerId">Клиент</label>
+                <select id="customerId" name="customerId" required>
+                    <option value="" disabled selected>— выберите клиента —</option>
+                    <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.name}"></option>
+                </select></div>
+            <div class="fixed"><button type="submit">Дальше</button></div>
+        </form>
+        <p class="muted" th:if="${#lists.isEmpty(customers)}">Клиентов нет — сначала добавьте клиента в разделе «Клиенты».</p>
+    </section>
+
+    <th:block th:if="${customer != null}">
+        <p><a th:href="@{/orders/customer/{id}(id=${customer.id})}">← Заказы клиента</a></p>
+        <h2 style="margin-top:0" th:text="${customer.name}">Клиент</h2>
+
+        <section>
+            <h2>1. Какие работы заказывает клиент?</h2>
+            <div class="works" id="works">
+                <label><input type="checkbox" value="CLICHE"> Клише</label>
+                <label><input type="checkbox" value="POSTPRESS"> Тиснение</label>
+                <label><input type="checkbox" value="PRINTING"> Печать</label>
+            </div>
+            <p class="muted" id="worksHint">Отметьте работы — появятся нужные расчёты.</p>
+        </section>
+
+        <!-- Отметки расчётов в таблицах относятся к форме заказа ниже (атрибут form="orderForm") -->
+
+        <section data-work="CLICHE" hidden>
+            <h2>Клише</h2>
+            <form th:action="@{/orders/new/{id}/cliche(id=${customer.id})}" method="post" class="row">
+                <div><label th:text="'Ширина, ' + ${lu.label}">Ширина</label><input type="number" name="width" step="any" min="0" required></div>
+                <div><label th:text="'Длина, ' + ${lu.label}">Длина</label><input type="number" name="length" step="any" min="0" required></div>
+                <div><label th:text="'Тех. поля (с каждой стороны), ' + ${lu.label}">Поля</label><input type="number" name="margin" step="any" min="0" value="0"></div>
+                <div><label>Количество клише</label><input type="number" name="quantity" min="1" step="1" value="1" required></div>
+                <div><label>Материал клише</label>
+                    <select name="materialId">
+                        <option value="">— не списывать —</option>
+                        <option th:each="m : ${clicheMaterials}" th:value="${m.id}"
+                                th:text="${m.category.label} + ': ' + ${m.name} + ' (свободно ' + ${m.available.stripTrailingZeros().toPlainString()} + ' см²)'"></option>
+                    </select></div>
+                <div class="fixed"><button type="submit">Рассчитать</button></div>
+            </form>
+            <p class="muted" style="margin:4px 0">Цена считается по общему размеру (размер + поля). Материал резервируется на складе при оформлении заказа: общая площадь × количество.</p>
+            <table th:unless="${#lists.isEmpty(clicheList)}">
+                <thead><tr><th></th><th>Дата</th><th>Размер</th><th>Общий размер</th><th>Материал</th><th class="num">Кол-во</th><th class="num">Стоимость</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${clicheList}">
+                    <td><input type="checkbox" name="clicheIds" th:value="${p.id}" form="orderForm"></td>
+                    <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+                    <td th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label}"></td>
+                    <td><b th:text="${lu.format(p.totalWidthCm)} + ' × ' + ${lu.format(p.totalLengthCm)} + ' ' + ${lu.label}"></b>
+                        <span class="muted" th:if="${p.marginCm.signum() > 0}" th:text="'(поля ' + ${lu.format(p.marginCm)} + ')'"></span></td>
+                    <td th:text="${p.material != null} ? ${p.material.name} : '—'"></td>
+                    <td class="num" th:text="${p.quantity}"></td>
+                    <td class="num total" th:text="${#numbers.formatDecimal(p.totalPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                    <td class="num">
+                        <form class="inline" method="post" th:action="@{/orders/new/{id}/cliche/{cid}/delete(id=${customer.id}, cid=${p.id})}">
+                            <button type="submit" class="danger small" title="Удалить расчёт">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section data-work="POSTPRESS" hidden>
+            <h2>Тиснение</h2>
+            <form th:action="@{/orders/new/{id}/postpress(id=${customer.id})}" method="post" class="row">
+                <div><label th:text="'Ширина, ' + ${lu.label}">Ширина</label><input type="number" name="width" step="any" min="0" required></div>
+                <div><label th:text="'Длина, ' + ${lu.label}">Длина</label><input type="number" name="length" step="any" min="0" required></div>
+                <div><label>Тираж</label><input type="number" name="quantity" min="1" step="1" required></div>
+                <div class="fixed"><button type="submit">Рассчитать</button></div>
+            </form>
+            <table th:unless="${#lists.isEmpty(postPressList)}">
+                <thead><tr><th></th><th>Дата</th><th>Размер</th><th class="num">Тираж</th><th class="num">Стоимость</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${postPressList}">
+                    <td><input type="checkbox" name="postPressIds" th:value="${p.id}" form="orderForm"></td>
+                    <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+                    <td th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label}"></td>
+                    <td class="num" th:text="${p.quantity}"></td>
+                    <td class="num total" th:text="${#numbers.formatDecimal(p.totalPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                    <td class="num">
+                        <form class="inline" method="post" th:action="@{/orders/new/{id}/postpress/{cid}/delete(id=${customer.id}, cid=${p.id})}">
+                            <button type="submit" class="danger small" title="Удалить расчёт">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section data-work="PRINTING" hidden>
+            <h2>Печать</h2>
+            <form th:action="@{/orders/new/{id}/printing(id=${customer.id})}" method="post" class="row">
+                <div><label>Бумага</label>
+                    <select name="papier"><option th:each="p : ${papers}" th:value="${p}" th:text="${p}"></option></select></div>
+                <div><label>Цветность</label>
+                    <select name="colour"><option th:each="c : ${colours}" th:value="${c}" th:text="${c}"></option></select></div>
+                <div><label>Тираж</label><input type="number" name="quantity" min="1" step="1" required></div>
+                <div class="fixed"><button type="submit">Рассчитать</button></div>
+            </form>
+            <table th:unless="${#lists.isEmpty(printingList)}">
+                <thead><tr><th></th><th>Дата</th><th>Бумага</th><th>Цветность</th><th class="num">Тираж</th><th class="num">Стоимость</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${printingList}">
+                    <td><input type="checkbox" name="printingIds" th:value="${p.id}" form="orderForm"></td>
+                    <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+                    <td th:text="${p.papier}"></td>
+                    <td th:text="${p.colour}"></td>
+                    <td class="num" th:text="${p.quantity}"></td>
+                    <td class="num total" th:text="${#numbers.formatDecimal(p.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
+                    <td class="num">
+                        <form class="inline" method="post" th:action="@{/orders/new/{id}/printing/{cid}/delete(id=${customer.id}, cid=${p.id})}">
+                            <button type="submit" class="danger small" title="Удалить расчёт">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="orderSection" hidden>
+            <h2>Оформить заказ</h2>
+            <p class="muted" style="margin-top:0">Отметьте галочками расчёты выше, которые входят в заказ.</p>
+            <form id="orderForm" th:action="@{/orders}" method="post">
+                <input type="hidden" name="customerId" th:value="${customer.id}">
+                <label for="product">Детали заказа</label>
+                <textarea id="product" name="product" required maxlength="255"></textarea>
+
+                <details style="margin-top:12px" th:unless="${#lists.isEmpty(paperMaterials)}">
+                    <summary>Бумага и картон: сколько листов зарезервировать</summary>
+                    <div class="row" th:each="m : ${paperMaterials}">
+                        <div>
+                            <label th:text="${m.name} + (${m.sheetSize} != null ? ' (' + ${m.sheetSize} + ')' : '') + ' — свободно ' + ${m.available.stripTrailingZeros().toPlainString()} + ' лист.'"></label>
+                            <input type="number" th:name="'m_' + ${m.id}" step="1" min="0" placeholder="0">
+                        </div>
+                    </div>
+                </details>
+                <p class="muted">Материалы резервируются при оформлении заказа и списываются со склада, когда заказ получает статус «Отгружен».</p>
+                <p><button type="submit">Оформить заказ</button></p>
+            </form>
+        </section>
+    </th:block>
+</main>
+
+<script th:if="${customer != null}" th:inline="javascript">
+    (function () {
+        var key = 'works-' + /*[[${customer.id}]]*/ '0';
+        var boxes = document.querySelectorAll('#works input');
+        var sections = document.querySelectorAll('section[data-work]');
+        var orderSection = document.getElementById('orderSection');
+        var hint = document.getElementById('worksHint');
+
+        function selected() {
+            var list = [];
+            boxes.forEach(function (b) { if (b.checked) list.push(b.value); });
+            return list;
+        }
+        function apply() {
+            var list = selected();
+            sections.forEach(function (s) {
+                var on = list.indexOf(s.getAttribute('data-work')) >= 0;
+                s.hidden = !on;
+                // расчёты скрытой работы не должны попасть в заказ
+                s.querySelectorAll('input[form="orderForm"]').forEach(function (c) {
+                    c.disabled = !on;
+                    if (!on) c.checked = false;
+                });
+            });
+            orderSection.hidden = list.length === 0;
+            hint.hidden = list.length > 0;
+            try { sessionStorage.setItem(key, JSON.stringify(list)); } catch (e) {}
+        }
+        try {
+            var saved = JSON.parse(sessionStorage.getItem(key) || '[]');
+            boxes.forEach(function (b) { b.checked = saved.indexOf(b.value) >= 0; });
+        } catch (e) {}
+        boxes.forEach(function (b) { b.addEventListener('change', apply); });
+        apply();
+    })();
+</script>
+</body>
+</html>

@@ -2,6 +2,8 @@ package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.Cliche;
 import com.springboot.printmastercrm.entity.Customer;
+import com.springboot.printmastercrm.entity.Material;
+import com.springboot.printmastercrm.entity.MaterialCategory;
 import com.springboot.printmastercrm.entity.Setting;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.NotFoundException;
@@ -27,15 +29,36 @@ public class ClicheService {
 
     @Transactional
     public Cliche create(Customer customer, BigDecimal widthCm, BigDecimal lengthCm, int quantity) {
+        return create(customer, widthCm, lengthCm, BigDecimal.ZERO, quantity, null);
+    }
+
+    /**
+     * Размеры — рабочее поле клише. Технологические поля marginCm добавляются с каждой стороны,
+     * цена считается по общему размеру (рабочее поле + поля).
+     */
+    @Transactional
+    public Cliche create(Customer customer, BigDecimal widthCm, BigDecimal lengthCm, BigDecimal marginCm,
+                         int quantity, Material material) {
         if (widthCm == null || lengthCm == null || widthCm.signum() <= 0 || lengthCm.signum() <= 0 || quantity <= 0) {
             throw new BusinessRuleException("Ширина, длина и количество должны быть больше нуля");
+        }
+        BigDecimal margin = marginCm == null ? BigDecimal.ZERO : marginCm;
+        if (margin.signum() < 0) {
+            throw new BusinessRuleException("Технологические поля не могут быть отрицательными");
+        }
+        if (material != null && material.getCategory() == MaterialCategory.PAPER) {
+            throw new BusinessRuleException("Для клише выберите магний или латунь");
         }
         Cliche cliche = new Cliche();
         cliche.setCustomer(customer);
         cliche.setWidthCm(widthCm);
         cliche.setLengthCm(lengthCm);
+        cliche.setMarginCm(margin);
+        cliche.setMaterial(material);
         cliche.setQuantity(quantity);
-        cliche.setTotalPrice(calculateTotal(widthCm, lengthCm, quantity, settingService.getSettings()));
+        BigDecimal doubleMargin = margin.multiply(BigDecimal.valueOf(2));
+        cliche.setTotalPrice(calculateTotal(widthCm.add(doubleMargin), lengthCm.add(doubleMargin), quantity,
+                settingService.getSettings()));
         return clicheRepository.save(cliche);
     }
 
@@ -50,7 +73,7 @@ public class ClicheService {
     }
 
     /**
-     * Одно клише = max(площадь * цена за единицу площади, минимальная цена).
+     * Размеры здесь — общие (с полями). Одно клише = max(площадь * цена за единицу площади, минимальная цена).
      * Итог = цена одного * количество * коэффициент.
      */
     public BigDecimal calculateTotal(BigDecimal widthCm, BigDecimal lengthCm, int quantity, Setting settings) {
