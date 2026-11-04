@@ -1,58 +1,76 @@
 package com.springboot.printmastercrm.service;
 
+import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.entity.Printing;
 import com.springboot.printmastercrm.entity.Setting;
+import com.springboot.printmastercrm.exception.BusinessRuleException;
+import com.springboot.printmastercrm.exception.NotFoundException;
 import com.springboot.printmastercrm.repository.PrintingRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class PrintingService {
 
-    @Autowired
-    private PrintingRepository printingRepository;
+    public static final List<String> PAPERS = List.of("90g/m2", "150g/m2", "200g/m2", "300g/m2");
+    public static final List<String> COLOURS = List.of("4+0", "4+4");
 
-    @Autowired
-    private SettingService settingService;
+    private final PrintingRepository printingRepository;
+    private final SettingService settingService;
 
-    public Printing save(Printing printing) {
+    public List<Printing> findByCustomerId(Long customerId) {
+        return printingRepository.findByCustomerIdOrderByIdDesc(customerId);
+    }
 
-        Setting setting = settingService.getSettings();
-
-
-        BigDecimal totalCost = calculateCost(printing, setting);
-
-        printing.setTotalCost(totalCost);
+    @Transactional
+    public Printing create(Customer customer, String papier, String colour, int quantity) {
+        if (quantity <= 0) {
+            throw new BusinessRuleException("Тираж должен быть больше нуля");
+        }
+        if (!PAPERS.contains(papier) || !COLOURS.contains(colour)) {
+            throw new BusinessRuleException("Выберите бумагу и цветность из списка");
+        }
+        Printing printing = new Printing();
+        printing.setCustomer(customer);
+        printing.setPapier(papier);
+        printing.setColour(colour);
+        printing.setQuantity(quantity);
+        printing.setTotalCost(calculateCost(papier, colour, quantity, settingService.getSettings()));
         return printingRepository.save(printing);
     }
 
-    public void deleteById(Long id) {
-        printingRepository.deleteById(id);
+    @Transactional
+    public void delete(Long customerId, Long id) {
+        Printing printing = printingRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Расчёт не найден"));
+        if (!printing.getCustomer().getId().equals(customerId)) {
+            throw new NotFoundException("Расчёт не найден");
+        }
+        printingRepository.delete(printing);
     }
 
-    public List<Printing> findByCustomerId(Long customerId) {
-        return printingRepository.findByCustomerId(customerId);
-    }
-
-    public BigDecimal calculateCost(Printing printing, Setting setting) {
-        if (printing.getQuantity() == null) {
+    /** Цена печати * цветность * тираж * множитель плотности бумаги * коэффициент. */
+    public BigDecimal calculateCost(String papier, String colour, Integer quantity, Setting setting) {
+        if (quantity == null) {
             throw new IllegalArgumentException("Quantity cannot be null");
         }
-        BigDecimal colorMultiplier = "4+4".equals(printing.getColour()) ? new BigDecimal("2") : BigDecimal.ONE;
+        BigDecimal colorMultiplier = "4+4".equals(colour) ? new BigDecimal("2") : BigDecimal.ONE;
 
         return setting.getPricePrint()
                 .multiply(colorMultiplier)
-                .multiply(BigDecimal.valueOf(printing.getQuantity()))
-                .multiply(getDensityMultiplier(printing.getPapier()))
-                .multiply(PostPressService.COEFFICIENT_NDS)
+                .multiply(BigDecimal.valueOf(quantity))
+                .multiply(densityMultiplier(papier))
+                .multiply(setting.getMarkup())
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal getDensityMultiplier(String papier) {
+    private BigDecimal densityMultiplier(String papier) {
         if (papier == null) {
             return BigDecimal.ONE;
         }
@@ -66,10 +84,5 @@ public class PrintingService {
             default: // 90g/m2 и неизвестные значения
                 return BigDecimal.ONE;
         }
-    }
-
-    public List<Printing> findAll() {
-        return printingRepository.findAll();
-
     }
 }

@@ -1,19 +1,15 @@
 package com.springboot.printmastercrm.service;
 
-import com.springboot.printmastercrm.entity.Account;
-import com.springboot.printmastercrm.entity.Customer;
-import com.springboot.printmastercrm.entity.Order;
-import com.springboot.printmastercrm.entity.OrderStatus;
-import com.springboot.printmastercrm.entity.PostPress;
-import com.springboot.printmastercrm.entity.Printing;
+import com.springboot.printmastercrm.entity.*;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.NotFoundException;
+import com.springboot.printmastercrm.repository.ClicheRepository;
 import com.springboot.printmastercrm.repository.OrderRepository;
 import com.springboot.printmastercrm.repository.PostPressRepository;
 import com.springboot.printmastercrm.repository.PrintingRepository;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,90 +17,97 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private PostPressRepository postPressRepository;
-
-    @Autowired
-    private PrintingRepository printingRepository;
+    private final OrderRepository orderRepository;
+    private final PostPressRepository postPressRepository;
+    private final PrintingRepository printingRepository;
+    private final ClicheRepository clicheRepository;
 
     /**
-     * Оформляет заказ из выбранных расчётов клиента. Суммы считаются на сервере
-     * по сохранённым расчётам, из запроса принимаются только id расчётов и описание.
-     * Чужой или несуществующий расчёт даёт NotFoundException.
+     * Оформляет заказ из выбранных расчётов клиента. Суммы берутся из сохранённых расчётов,
+     * из запроса принимаются только их id и описание. Расчёт другого клиента даёт NotFoundException.
      */
     @Transactional
-    public Order createOrder(Customer customer, Account manager, String product,
-                             List<Long> postPressIds, List<Long> printingIds) {
+    public Order createOrder(Customer customer, String product,
+                             List<Long> postPressIds, List<Long> printingIds, List<Long> clicheIds) {
         if (product == null || product.isBlank()) {
             throw new BusinessRuleException("Укажите детали заказа");
         }
-        LinkedHashSet<Long> ppIds = new LinkedHashSet<>(postPressIds == null ? List.of() : postPressIds);
-        LinkedHashSet<Long> prIds = new LinkedHashSet<>(printingIds == null ? List.of() : printingIds);
-        if (ppIds.isEmpty() && prIds.isEmpty()) {
+        LinkedHashSet<Long> ppIds = unique(postPressIds);
+        LinkedHashSet<Long> prIds = unique(printingIds);
+        LinkedHashSet<Long> clIds = unique(clicheIds);
+        if (ppIds.isEmpty() && prIds.isEmpty() && clIds.isEmpty()) {
             throw new BusinessRuleException("Выберите хотя бы один расчёт для заказа");
         }
 
-        BigDecimal postpressTotal = BigDecimal.ZERO;
+        BigDecimal postpress = BigDecimal.ZERO;
         for (Long id : ppIds) {
             PostPress pp = postPressRepository.findById(id)
-                    .orElseThrow(() -> new NotFoundException("PostPress not found"));
-            if (pp.getCustomer() == null || !pp.getCustomer().getId().equals(customer.getId())) {
-                throw new NotFoundException("PostPress not found");
-            }
-            if (pp.getTotalPrice() != null) {
-                postpressTotal = postpressTotal.add(pp.getTotalPrice());
-            }
+                    .orElseThrow(() -> new NotFoundException("Расчёт тиснения не найден"));
+            requireSameCustomer(pp.getCustomer(), customer);
+            postpress = postpress.add(pp.getTotalPrice());
         }
-
-        BigDecimal printingTotal = BigDecimal.ZERO;
+        BigDecimal printing = BigDecimal.ZERO;
         for (Long id : prIds) {
             Printing pr = printingRepository.findById(id)
-                    .orElseThrow(() -> new NotFoundException("Printing not found"));
-            if (pr.getCustomer() == null || !pr.getCustomer().getId().equals(customer.getId())) {
-                throw new NotFoundException("Printing not found");
-            }
-            printingTotal = printingTotal.add(pr.getTotalCost());
+                    .orElseThrow(() -> new NotFoundException("Расчёт печати не найден"));
+            requireSameCustomer(pr.getCustomer(), customer);
+            printing = printing.add(pr.getTotalCost());
+        }
+        BigDecimal cliche = BigDecimal.ZERO;
+        for (Long id : clIds) {
+            Cliche cl = clicheRepository.findById(id)
+                    .orElseThrow(() -> new NotFoundException("Расчёт клише не найден"));
+            requireSameCustomer(cl.getCustomer(), customer);
+            cliche = cliche.add(cl.getTotalPrice());
         }
 
         Order order = new Order();
         order.setCustomer(customer);
-        order.setAccount(manager);
         order.setProduct(product.trim());
-        order.setPostpressPrice(postpressTotal.setScale(2, RoundingMode.HALF_UP));
-        order.setTotalCost(postpressTotal.add(printingTotal).setScale(2, RoundingMode.HALF_UP));
+        order.setPostpressPrice(postpress.setScale(2, RoundingMode.HALF_UP));
+        order.setPrintingPrice(printing.setScale(2, RoundingMode.HALF_UP));
+        order.setClichePrice(cliche.setScale(2, RoundingMode.HALF_UP));
+        order.setTotalCost(postpress.add(printing).add(cliche).setScale(2, RoundingMode.HALF_UP));
         order.setStatus(OrderStatus.NEW);
         return orderRepository.save(order);
     }
 
-    /**
-     * Меняет статус заказа. Менеджер может менять только свои заказы, админ любые.
-     * Чужой заказ неотличим от несуществующего (NotFoundException).
-     */
-    public void setStatus(Long orderId, OrderStatus status, String username, boolean admin) {
+    @Transactional
+    public void setStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NotFoundException("Order not found"));
-        if (!admin && !order.getAccount().getUsername().equals(username)) {
-            throw new NotFoundException("Order not found");
-        }
+                .orElseThrow(() -> new NotFoundException("Заказ не найден"));
         order.setStatus(status);
         orderRepository.save(order);
     }
 
-    /**
-     * Заказы, которые пользователь вправе видеть: админ все, менеджер только свои.
-     * status == null означает «любой статус».
-     */
-    public List<Order> getVisibleOrders(String username, boolean admin, OrderStatus status) {
-        if (admin) {
-            return status == null ? orderRepository.findAll() : orderRepository.findByStatus(status);
+    @Transactional
+    public void delete(Long orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new NotFoundException("Заказ не найден");
         }
-        return status == null
-                ? orderRepository.findByAccountUsername(username)
-                : orderRepository.findByAccountUsernameAndStatus(username, status);
+        orderRepository.deleteById(orderId);
+    }
+
+    /** status == null означает «любой статус», customerId == null — «любой клиент». */
+    public List<Order> find(OrderStatus status, Long customerId) {
+        if (customerId == null) {
+            return status == null ? orderRepository.findAllByOrderByIdDesc()
+                    : orderRepository.findByStatusOrderByIdDesc(status);
+        }
+        return status == null ? orderRepository.findByCustomerIdOrderByIdDesc(customerId)
+                : orderRepository.findByCustomerIdAndStatusOrderByIdDesc(customerId, status);
+    }
+
+    private static LinkedHashSet<Long> unique(List<Long> ids) {
+        return new LinkedHashSet<>(ids == null ? List.of() : ids);
+    }
+
+    private static void requireSameCustomer(Customer owner, Customer customer) {
+        if (owner == null || !owner.getId().equals(customer.getId())) {
+            throw new NotFoundException("Расчёт не найден");
+        }
     }
 }

@@ -1,161 +1,76 @@
 package com.springboot.printmastercrm.service;
 
-import com.springboot.printmastercrm.entity.Account;
 import com.springboot.printmastercrm.entity.Customer;
-import com.springboot.printmastercrm.entity.Order;
-import com.springboot.printmastercrm.entity.PostPress;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.ExistsException;
 import com.springboot.printmastercrm.exception.NotFoundException;
 import com.springboot.printmastercrm.repository.*;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class CustomerService {
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final CustomerRepository customerRepository;
+    private final PostPressRepository postPressRepository;
+    private final PrintingRepository printingRepository;
+    private final ClicheRepository clicheRepository;
+    private final OrderRepository orderRepository;
 
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private PostPressRepository postPressRepository;
-
-    @Autowired
-    private PrintingRepository printingRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    // Получение клиентов по менеджеру
-    public List<Customer> getCustomersByManager(String managerUsername) {
-        return customerRepository.findByAccountUsername(managerUsername);
+    public List<Customer> search(String query) {
+        if (query == null || query.isBlank()) {
+            return customerRepository.findAllByOrderByNameAsc();
+        }
+        String q = query.trim();
+        return customerRepository
+                .findByNameContainingIgnoreCaseOrPhoneNumberContainingIgnoreCaseOrEmailContainingIgnoreCaseOrderByNameAsc(q, q, q);
     }
 
-    // Создание клиента для менеджера
-    public Customer createCustomerForManager(Customer customer, String managerUsername) {
-        Account managerAccount = accountRepository.findByUsername(managerUsername)
-                .orElseThrow(() -> new NotFoundException("Manager account not found"));
-        customer.setId(null); // всегда создаём нового клиента, а не обновляем чужого
-        normalizeAndValidate(customer);
+    public Customer get(Long id) {
+        return customerRepository.findById(id).orElseThrow(() -> new NotFoundException("Клиент не найден"));
+    }
+
+    @Transactional
+    public Customer create(String name, String phone, String email) {
+        Customer customer = Customer.builder()
+                .name(trim(name)).phoneNumber(trim(phone)).email(trim(email)).build();
+        requireFilled(customer);
         assertUnique(customer, null);
-        customer.setAccount(managerAccount);
         return customerRepository.save(customer);
     }
 
-    // Поиск клиента по ID (без проверки владельца: для админских операций)
-    public Customer findById(Long id) {
-        return customerRepository.findById(id).orElseThrow(() -> new NotFoundException("Customer not found"));
+    @Transactional
+    public Customer update(Long id, String name, String phone, String email) {
+        Customer existing = get(id);
+        Customer incoming = Customer.builder()
+                .name(trim(name)).phoneNumber(trim(phone)).email(trim(email)).build();
+        requireFilled(incoming);
+        assertUnique(incoming, id);
+        existing.setName(incoming.getName());
+        existing.setPhoneNumber(incoming.getPhoneNumber());
+        existing.setEmail(incoming.getEmail());
+        return customerRepository.save(existing);
     }
 
-    /**
-     * Возвращает клиента, только если он закреплён за указанным менеджером.
-     * Чужой и несуществующий клиент неразличимы: в обоих случаях NotFoundException (404),
-     * чтобы нельзя было перебором выяснить, какие id существуют.
-     */
-    public Customer getOwnedCustomer(Long customerId, String managerUsername) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new NotFoundException("Customer not found"));
-        if (customer.getAccount() == null || !customer.getAccount().getUsername().equals(managerUsername)) {
-            throw new NotFoundException("Customer not found");
-        }
-        return customer;
-    }
-
-    /**
-     * Обновляет только данные карточки клиента (название, телефон, email).
-     * Менеджер и аккаунт из формы не принимаются: их меняет только админ через передачу клиента.
-     */
-    public Customer updateCustomer(Customer updatedCustomer, String managerUsername) {
-        Customer existingCustomer = getOwnedCustomer(updatedCustomer.getId(), managerUsername);
-
-        normalizeAndValidate(updatedCustomer);
-        assertUnique(updatedCustomer, existingCustomer.getId());
-
-        existingCustomer.setUsername(updatedCustomer.getUsername());
-        existingCustomer.setPhoneNumber(updatedCustomer.getPhoneNumber());
-        existingCustomer.setEmail(updatedCustomer.getEmail());
-
-        return customerRepository.save(existingCustomer);
-    }
-
-    /**
-     * Удаляет клиента вместе со всеми связанными данными.
-     * Порядок важен: сначала всё, что ссылается на клиента по внешнему ключу.
-     */
-    public void deleteCustomer(Long customerId) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new NotFoundException("Customer not found"));
-
-        orderRepository.deleteAll(orderRepository.findByCustomerId(customerId));
-        postPressRepository.deleteByCustomerId(customerId);
-        printingRepository.deleteByCustomerId(customerId);
-
+    /** Удаляет клиента вместе с его заказами и расчётами. */
+    @Transactional
+    public void delete(Long id) {
+        Customer customer = get(id);
+        orderRepository.deleteByCustomerId(id);
+        postPressRepository.deleteByCustomerId(id);
+        printingRepository.deleteByCustomerId(id);
+        clicheRepository.deleteByCustomerId(id);
         customerRepository.delete(customer);
     }
 
-    // Получение всех клиентов
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
-    }
-
-    // Получение заказов клиента
-    public List<Order> findOrdersByCustomerId(Long customerId) {
-        return orderRepository.findByCustomerId(customerId);
-    }
-
-    // Обновление заказа
-    public void updateOrder(Order order) {
-        orderRepository.save(order);
-    }
-
-    public void transferCustomerToManager(Long customerId, Long newManagerId) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new NotFoundException("Customer not found"));
-
-        Account newManager = accountRepository.findById(newManagerId)
-                .orElseThrow(() -> new NotFoundException("Manager not found"));
-
-        customer.setAccount(newManager);
-        customerRepository.save(customer);
-
-        // расчёты тиснения тоже закреплены за менеджером клиента
-        for (PostPress postPress : postPressRepository.findByCustomerId(customerId)) {
-            postPress.setManager(newManager);
-            postPressRepository.save(postPress);
-        }
-
-        List<Order> orders = orderRepository.findByCustomerId(customerId);
-        for (Order order : orders) {
-            order.setAccount(newManager); // Устанавливаем нового менеджера
-            orderRepository.save(order);
-        }
-    }
-
-    private void normalizeAndValidate(Customer customer) {
-        customer.setUsername(trimToEmpty(customer.getUsername()));
-        customer.setPhoneNumber(trimToEmpty(customer.getPhoneNumber()));
-        customer.setEmail(trimToEmpty(customer.getEmail()));
-        if (customer.getUsername().isEmpty() || customer.getPhoneNumber().isEmpty() || customer.getEmail().isEmpty()) {
-            throw new BusinessRuleException("Заполните название организации, телефон и email");
-        }
-    }
-
-    private static String trimToEmpty(String value) {
-        return value == null ? "" : value.trim();
-    }
-
-    /** excludeId == null: создание, иначе обновление (саму запись не считаем дубликатом). */
     private void assertUnique(Customer customer, Long excludeId) {
         boolean creating = excludeId == null;
-        if (creating ? customerRepository.existsByUsername(customer.getUsername())
-                : customerRepository.existsByUsernameAndIdNot(customer.getUsername(), excludeId)) {
+        if (creating ? customerRepository.existsByName(customer.getName())
+                : customerRepository.existsByNameAndIdNot(customer.getName(), excludeId)) {
             throw new ExistsException("Клиент с таким названием уже существует");
         }
         if (creating ? customerRepository.existsByPhoneNumber(customer.getPhoneNumber())
@@ -166,5 +81,15 @@ public class CustomerService {
                 : customerRepository.existsByEmailAndIdNot(customer.getEmail(), excludeId)) {
             throw new ExistsException("Клиент с таким email уже существует");
         }
+    }
+
+    private static void requireFilled(Customer customer) {
+        if (customer.getName().isEmpty() || customer.getPhoneNumber().isEmpty() || customer.getEmail().isEmpty()) {
+            throw new BusinessRuleException("Заполните название организации, телефон и email");
+        }
+    }
+
+    private static String trim(String value) {
+        return value == null ? "" : value.trim();
     }
 }

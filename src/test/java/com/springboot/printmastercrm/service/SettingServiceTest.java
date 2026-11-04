@@ -1,5 +1,7 @@
 package com.springboot.printmastercrm.service;
 
+import com.springboot.printmastercrm.entity.AreaUnit;
+import com.springboot.printmastercrm.entity.LengthUnit;
 import com.springboot.printmastercrm.entity.Setting;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.repository.SettingRepository;
@@ -27,43 +29,60 @@ class SettingServiceTest {
     @InjectMocks
     private SettingService service;
 
-    private static Setting prices(String montage, String ottisk, String foil, String print) {
-        Setting s = new Setting();
-        s.setMontageWorkPrice(new BigDecimal(montage));
-        s.setOneOttiskPrice(new BigDecimal(ottisk));
-        s.setOneQuadratMetterFoilPrice(new BigDecimal(foil));
-        s.setPricePrint(new BigDecimal(print));
-        return s;
-    }
-
     @Test
     void negativePriceIsRejected() {
-        assertThatThrownBy(() -> service.saveSettings(prices("100", "-1", "50", "0.1")))
-                .isInstanceOf(BusinessRuleException.class);
+        Setting form = TestSettings.standard();
+        form.setOneOttiskPrice(new BigDecimal("-1"));
+
+        assertThatThrownBy(() -> service.saveSettings(form)).isInstanceOf(BusinessRuleException.class);
         verify(settingRepository, never()).save(any());
     }
 
     @Test
     void missingPriceIsRejected() {
-        Setting s = prices("100", "2", "50", "0.1");
-        s.setPricePrint(null);
+        Setting form = TestSettings.standard();
+        form.setClichePrice(null);
 
-        assertThatThrownBy(() -> service.saveSettings(s)).isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.saveSettings(form)).isInstanceOf(BusinessRuleException.class);
     }
 
     @Test
-    void updatesTheSingleSettingsRow() {
-        Setting existing = prices("1", "1", "1", "1");
+    void markupMustBePositive() {
+        Setting form = TestSettings.standard();
+        form.setMarkup(BigDecimal.ZERO);
+
+        assertThatThrownBy(() -> service.saveSettings(form)).isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
+    void updatesTheSingleSettingsRowAndIgnoresIncomingId() {
+        Setting existing = new Setting();
         existing.setId(1L);
         when(settingRepository.findById(1L)).thenReturn(Optional.of(existing));
-        Setting incoming = prices("100", "2", "50", "0.10");
-        incoming.setId(999L); // чужой id из формы игнорируется
+        when(settingRepository.save(any(Setting.class))).thenAnswer(i -> i.getArgument(0));
+        Setting form = TestSettings.standard();
+        form.setId(999L);
+        form.setLengthUnit(LengthUnit.MM);
+        form.setFoilAreaUnit(AreaUnit.CM2);
 
-        service.saveSettings(incoming);
+        Setting saved = service.saveSettings(form);
 
-        verify(settingRepository).save(existing);
-        assertThat(existing.getId()).isEqualTo(1L);
-        assertThat(existing.getMontageWorkPrice()).isEqualByComparingTo("100");
-        assertThat(existing.getPricePrint()).isEqualByComparingTo("0.10");
+        assertThat(saved).isSameAs(existing);
+        assertThat(saved.getId()).isEqualTo(1L);
+        assertThat(saved.getLengthUnit()).isEqualTo(LengthUnit.MM);
+        assertThat(saved.getFoilAreaUnit()).isEqualTo(AreaUnit.CM2);
+        assertThat(saved.getMontageWorkPrice()).isEqualByComparingTo("100");
+        assertThat(saved.getMarkup()).isEqualByComparingTo("1.25");
+    }
+
+    @Test
+    void missingRowIsCreatedWithDefaults() {
+        when(settingRepository.findById(1L)).thenReturn(Optional.empty());
+        when(settingRepository.save(any(Setting.class))).thenAnswer(i -> i.getArgument(0));
+
+        Setting settings = service.getSettings();
+
+        assertThat(settings.getId()).isEqualTo(1L);
+        assertThat(settings.getMarkup()).isEqualByComparingTo("1.25");
     }
 }

@@ -1,41 +1,53 @@
 package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @ToString
 @Table(name = "customer_orders")
 public class Order {
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status;
-    
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
+    @ToString.Exclude
     private Customer customer;
-
-    @ManyToOne
-    @JoinColumn(name = "manager_id", nullable = false)
-    private Account account;
 
     @Column(nullable = false)
     private String product;
 
     @Column(nullable = false)
-    private BigDecimal postpressPrice;
+    private BigDecimal postpressPrice = BigDecimal.ZERO;
 
     @Column(nullable = false)
-    private BigDecimal totalCost;
+    private BigDecimal printingPrice = BigDecimal.ZERO;
+
+    @Column(nullable = false)
+    private BigDecimal clichePrice = BigDecimal.ZERO;
+
+    @Column(nullable = false)
+    private BigDecimal totalCost = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false)
+    private OrderStatus status = OrderStatus.NEW;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

@@ -1,15 +1,19 @@
 package com.springboot.printmastercrm.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
+/** Расчёт тиснения. Размеры хранятся в сантиметрах. */
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @ToString
 public class PostPress {
 
@@ -17,17 +21,22 @@ public class PostPress {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "customer_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    @ToString.Exclude
     private Customer customer;
 
-    @ManyToOne
-    @JoinColumn(name = "manager_id") // Связь с таблицей Account
-    private Account manager; // Поле для назначения менеджера
-
     private int quantity;
-    private double widthSM;
-    private double lengthSM;
+
+    @Column(nullable = false)
+    private BigDecimal widthCm;
+
+    @Column(nullable = false)
+    private BigDecimal lengthCm;
+
+    @Column(nullable = false)
     private BigDecimal totalPrice;
 
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

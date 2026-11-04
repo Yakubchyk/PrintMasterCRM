@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{_layout :: head('Клиенты')}"></head>
+<body>
+<nav th:replace="~{_layout :: nav('customers')}"></nav>
+<main>
+    <h1>Клиенты</h1>
+    <div th:replace="~{_layout :: alerts}"></div>
+
+    <section>
+        <form th:action="@{/customers}" method="get" class="row">
+            <div>
+                <label for="q">Поиск по названию, телефону или email</label>
+                <input type="search" id="q" name="q" th:value="${q}">
+            </div>
+            <div class="fixed">
+                <button type="submit">Найти</button>
+                <a class="button secondary" th:href="@{/customers}" th:if="${!q.isEmpty()}">Сбросить</a>
+            </div>
+        </form>
+
+        <div class="muted" th:if="${#lists.isEmpty(customers)}" style="margin-top:12px">Клиентов нет</div>
+        <table th:unless="${#lists.isEmpty(customers)}">
+            <thead>
+            <tr><th>Название организации</th><th>Телефон</th><th>Email</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${customers}">
+                <td><a th:href="@{/customers/{id}(id=${c.id})}" th:text="${c.name}">Название</a></td>
+                <td th:text="${c.phoneNumber}">Телефон</td>
+                <td th:text="${c.email}">Email</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <details>
+            <summary>Новый клиент</summary>
+            <form th:action="@{/customers}" method="post" class="row">
+                <div><label for="name">Название организации</label><input type="text" id="name" name="name" required></div>
+                <div><label for="phone">Телефон</label><input type="text" id="phone" name="phone" required></div>
+                <div><label for="email">Email</label><input type="email" id="email" name="email" required></div>
+                <div class="fixed"><button type="submit">Добавить</button></div>
+            </form>
+        </details>
+    </section>
+</main>
+</body>
+</html>

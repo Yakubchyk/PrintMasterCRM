@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<!-- Общие части страниц: <head th:replace="~{_layout :: head('Заголовок')}"> и <nav th:replace="~{_layout :: nav('customers')}"> -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' — PrintMasterCRM'">PrintMasterCRM</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<nav th:fragment="nav(active)" class="top">
+    <span class="brand">PrintMasterCRM</span>
+    <a th:href="@{/customers}" th:classappend="${active == 'customers'} ? 'active'">Клиенты</a>
+    <a th:href="@{/orders}" th:classappend="${active == 'orders'} ? 'active'">Заказы</a>
+    <a th:href="@{/materials}" th:classappend="${active == 'materials'} ? 'active'">Материалы</a>
+    <a th:href="@{/settings}" th:classappend="${active == 'settings'} ? 'active'">Настройки</a>
+</nav>
+<div th:fragment="alerts">
+    <div class="alert error" th:if="${error != null}" th:text="${error}">Ошибка</div>
+    <div class="alert ok" th:if="${saved != null}" th:text="${saved}">Сохранено</div>
+</div>
+</body>
+</html>
