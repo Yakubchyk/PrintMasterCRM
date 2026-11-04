@@ -24,7 +24,7 @@ public class PrintingService {
         Setting setting = settingService.getSettings();
 
 
-        double totalCost = calculateCost(printing, setting);
+        BigDecimal totalCost = calculateCost(printing, setting);
 
         printing.setTotalCost(totalCost);
         return printingRepository.save(printing);
@@ -38,36 +38,33 @@ public class PrintingService {
         return printingRepository.findByCustomerId(customerId);
     }
 
-    public double calculateCost(Printing printing, Setting setting) {
+    public BigDecimal calculateCost(Printing printing, Setting setting) {
         if (printing.getQuantity() == null) {
             throw new IllegalArgumentException("Quantity cannot be null");
         }
-        double basePrice = setting.getPricePrint();
-        double colorMultiplier = "4+4".equals(printing.getColour()) ? 2 : 1;
-        double densityMultiplier = getDensityMultiplier(printing.getPapier());
-        double rawCost = basePrice * colorMultiplier * printing.getQuantity() * densityMultiplier
-                * PostPressService.COEFFICIENT_NDS;
+        BigDecimal colorMultiplier = "4+4".equals(printing.getColour()) ? new BigDecimal("2") : BigDecimal.ONE;
 
-        BigDecimal roundedCost = BigDecimal.valueOf(rawCost).setScale(2, RoundingMode.HALF_UP);
-
-        return roundedCost.doubleValue();
+        return setting.getPricePrint()
+                .multiply(colorMultiplier)
+                .multiply(BigDecimal.valueOf(printing.getQuantity()))
+                .multiply(getDensityMultiplier(printing.getPapier()))
+                .multiply(PostPressService.COEFFICIENT_NDS)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
-    private double getDensityMultiplier(String papier) {
+    private BigDecimal getDensityMultiplier(String papier) {
         if (papier == null) {
-            return 1.0;
+            return BigDecimal.ONE;
         }
         switch (papier) {
-            case "90g/m2":
-                return 1.0;
             case "150g/m2":
-                return 1.2;
+                return new BigDecimal("1.2");
             case "200g/m2":
-                return 1.4;
+                return new BigDecimal("1.4");
             case "300g/m2":
-                return 1.6;
-            default:
-                return 1.0;
+                return new BigDecimal("1.6");
+            default: // 90g/m2 и неизвестные значения
+                return BigDecimal.ONE;
         }
     }
 

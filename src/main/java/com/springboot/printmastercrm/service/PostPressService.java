@@ -13,10 +13,12 @@ import java.util.List;
 @Service
 public class PostPressService {
 
-    private static final double COEFFICIENT_METER = 10000.0;
-    public static final double COEFFICIENT_NDS = 1.25; // применяется ко всей итоговой сумме
-    private static final double COEFFICIENT_WORK = 1.05;
-    private static final int MIN_AREA = 50;
+    private static final BigDecimal SQ_CM_IN_SQ_M = new BigDecimal("10000");
+    /** Применяется ко всей итоговой сумме любого расчёта. */
+    public static final BigDecimal COEFFICIENT_NDS = new BigDecimal("1.25");
+    private static final BigDecimal COEFFICIENT_WORK = new BigDecimal("1.05");
+    /** Минимальная площадь оттиска, см². */
+    private static final BigDecimal MIN_AREA = new BigDecimal("50");
 
     @Autowired
     private PostPressRepository postPressRepository;
@@ -44,24 +46,27 @@ public class PostPressService {
     }
 
     public BigDecimal calculateTotal(PostPress postPress, Setting settings) {
-        double quadratMetter;
-
-        if ((postPress.getWidthSM() * postPress.getLengthSM()) <= MIN_AREA) {
-            quadratMetter = MIN_AREA / COEFFICIENT_METER;
-        } else {
-            quadratMetter = (postPress.getWidthSM() * postPress.getLengthSM()) / COEFFICIENT_METER;
+        BigDecimal quantity = BigDecimal.valueOf(postPress.getQuantity());
+        BigDecimal area = BigDecimal.valueOf(postPress.getWidthSM())
+                .multiply(BigDecimal.valueOf(postPress.getLengthSM()));
+        if (area.compareTo(MIN_AREA) <= 0) {
+            area = MIN_AREA;
         }
+        BigDecimal squareMeters = area.divide(SQ_CM_IN_SQ_M, 10, RoundingMode.HALF_UP);
 
-        double totalFoilExpense = ((postPress.getQuantity() * quadratMetter) * COEFFICIENT_WORK) * settings.getOneQuadratMetterFoilPrice();
+        BigDecimal foil = quantity.multiply(squareMeters)
+                .multiply(COEFFICIENT_WORK)
+                .multiply(settings.getOneQuadratMetterFoilPrice());
 
-        double totalWorkPrice = (settings.getMontageWorkPrice() + settings.getOneOttiskPrice() * postPress.getQuantity()) * COEFFICIENT_WORK;
+        BigDecimal work = settings.getMontageWorkPrice()
+                .add(settings.getOneOttiskPrice().multiply(quantity))
+                .multiply(COEFFICIENT_WORK);
 
-        BigDecimal totalCost = BigDecimal.valueOf((totalWorkPrice + totalFoilExpense) * COEFFICIENT_NDS);
-
-        totalCost = totalCost.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalCost = work.add(foil)
+                .multiply(COEFFICIENT_NDS)
+                .setScale(2, RoundingMode.HALF_UP);
 
         postPress.setTotalPrice(totalCost);
-
         return totalCost;
     }
 

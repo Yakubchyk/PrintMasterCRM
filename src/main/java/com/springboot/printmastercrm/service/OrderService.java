@@ -68,7 +68,7 @@ public class OrderService {
             if (pr.getCustomer() == null || !pr.getCustomer().getId().equals(customer.getId())) {
                 throw new NotFoundException("Printing not found");
             }
-            printingTotal = printingTotal.add(BigDecimal.valueOf(pr.getTotalCost()));
+            printingTotal = printingTotal.add(pr.getTotalCost());
         }
 
         Order order = new Order();
