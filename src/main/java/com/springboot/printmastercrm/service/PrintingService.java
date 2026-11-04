@@ -45,7 +45,8 @@ public class PrintingService {
         double basePrice = setting.getPricePrint();
         double colorMultiplier = "4+4".equals(printing.getColour()) ? 2 : 1;
         double densityMultiplier = getDensityMultiplier(printing.getPapier());
-        double rawCost = basePrice * colorMultiplier * printing.getQuantity() * densityMultiplier;
+        double rawCost = basePrice * colorMultiplier * printing.getQuantity() * densityMultiplier
+                * PostPressService.COEFFICIENT_NDS;
 
         BigDecimal roundedCost = BigDecimal.valueOf(rawCost).setScale(2, RoundingMode.HALF_UP);
 
