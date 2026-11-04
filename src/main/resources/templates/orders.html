@@ -2,12 +2,13 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
-<head th:insert="~{_bootstrap::link}">
+<head>
     <meta charset="UTF-8">
     <title>Заказы</title>
+    <th:block th:insert="~{_bootstrap::head-assets}"></th:block>
 </head>
 <body>
-<header th:insert="~{_header.html}"></header>
+<header th:replace="~{_header :: nav}"></header>
 
 <div class="container mt-3">
     <h4>Заказы</h4>
@@ -56,6 +57,6 @@
     </table>
 </div>
 
-<th:block th:insert="~{_bootstrap::script}"></th:block>
+<th:block th:insert="~{_bootstrap::scripts}"></th:block>
 </body>
 </html>

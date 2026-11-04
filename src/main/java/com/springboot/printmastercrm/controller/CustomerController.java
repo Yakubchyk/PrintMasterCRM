@@ -86,6 +86,7 @@ public class CustomerController {
             return "redirect:/profile/postpress?customerId=" + customerId;
         }
         postPress.setCustomer(customer);
+        postPress.setManager(customer.getAccount());
 
         postPressService.save(postPress);
 

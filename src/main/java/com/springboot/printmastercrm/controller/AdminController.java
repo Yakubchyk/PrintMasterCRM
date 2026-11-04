@@ -1,8 +1,11 @@
 package com.springboot.printmastercrm.controller;
 
-import com.springboot.printmastercrm.entity.*;
-import com.springboot.printmastercrm.service.*;
+import com.springboot.printmastercrm.entity.Account;
+import com.springboot.printmastercrm.entity.Setting;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
+import com.springboot.printmastercrm.service.AccountService;
+import com.springboot.printmastercrm.service.CustomerService;
+import com.springboot.printmastercrm.service.SettingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -21,40 +24,21 @@ public class AdminController {
 
     @Autowired
     private CustomerService customerService;
-    @Autowired
-    private PostPressService postPressService;
-    @Autowired
-    private PrintingService printingService;
+
     @Autowired
     private AccountService accountService;
 
     @GetMapping("/settings")
-    public String getSettings(@RequestParam(value = "customerId", required = false) Long customerId, Model model) {
-        List<Customer> customers = customerService.getAllCustomers();
-        model.addAttribute("customers", customers);
+    public String getSettings(Model model) {
+        model.addAttribute("customers", customerService.getAllCustomers());
+        model.addAttribute("settings", settingService.getSettings());
 
-        Setting settings = settingService.getSettings();
-        model.addAttribute("settings", settings);
-
-        List<PostPress> postPressList;
-        if (customerId != null) {
-            postPressList = postPressService.findByCustomerId(customerId);
-        } else {
-            postPressList = postPressService.findAll();
-        }
-
-        List<Printing> printingList;
-        if (customerId != null) {
-            printingList = printingService.findByCustomerId(customerId);
-        } else {
-            printingList = printingService.findAll();
-        }
-
-        List<Account> accountList = accountService.findAll(customerId);
-
-        model.addAttribute("postPressList", postPressList);
-        model.addAttribute("printingList", printingList);
+        List<Account> accountList = accountService.findAll();
         model.addAttribute("accountList", accountList);
+        // клиентов передают только менеджерам, а не администраторам
+        model.addAttribute("managerList", accountList.stream()
+                .filter(account -> account.getRoles().contains(Account.Role.ROLE_MANAGER))
+                .toList());
         return "settings";
     }
 
@@ -66,12 +50,6 @@ public class AdminController {
         } catch (BusinessRuleException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/settings";
-    }
-
-    @PostMapping("/settings/delete")
-    public String deletePostPress(@RequestParam("postPressId") Long postPressId) {
-        postPressService.deletePostPressById(postPressId);
         return "redirect:/admin/settings";
     }
 
@@ -110,18 +88,6 @@ public class AdminController {
         } catch (BusinessRuleException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/settings";
-    }
-
-    @PostMapping("/printing/delete")
-    public String deletePrinting(@RequestParam("printingId") Long printingId) {
-        printingService.deleteById(printingId);
-        return "redirect:/admin/settings";
-    }
-
-    @PostMapping("/settings/deleteCustomer")
-    public String deleteCustomer(@RequestParam("id") Long id) {
-        customerService.deleteCustomer(id);
         return "redirect:/admin/settings";
     }
 }

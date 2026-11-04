@@ -3,6 +3,7 @@ package com.springboot.printmastercrm.service;
 import com.springboot.printmastercrm.entity.Account;
 import com.springboot.printmastercrm.entity.Customer;
 import com.springboot.printmastercrm.entity.Order;
+import com.springboot.printmastercrm.entity.PostPress;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
 import com.springboot.printmastercrm.exception.ExistsException;
 import com.springboot.printmastercrm.exception.NotFoundException;
@@ -34,7 +35,7 @@ public class CustomerService {
 
     // Получение клиентов по менеджеру
     public List<Customer> getCustomersByManager(String managerUsername) {
-        return customerRepository.findByManagerUsername(managerUsername);
+        return customerRepository.findByAccountUsername(managerUsername);
     }
 
     // Создание клиента для менеджера
@@ -44,7 +45,6 @@ public class CustomerService {
         customer.setId(null); // всегда создаём нового клиента, а не обновляем чужого
         normalizeAndValidate(customer);
         assertUnique(customer, null);
-        customer.setManagerUsername(managerUsername);
         customer.setAccount(managerAccount);
         return customerRepository.save(customer);
     }
@@ -122,9 +122,14 @@ public class CustomerService {
         Account newManager = accountRepository.findById(newManagerId)
                 .orElseThrow(() -> new NotFoundException("Manager not found"));
 
-        customer.setManagerUsername(newManager.getUsername());
         customer.setAccount(newManager);
         customerRepository.save(customer);
+
+        // расчёты тиснения тоже закреплены за менеджером клиента
+        for (PostPress postPress : postPressRepository.findByCustomerId(customerId)) {
+            postPress.setManager(newManager);
+            postPressRepository.save(postPress);
+        }
 
         List<Order> orders = orderRepository.findByCustomerId(customerId);
         for (Order order : orders) {
