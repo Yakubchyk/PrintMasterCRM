@@ -66,7 +66,6 @@ public class PrintingService {
                 .multiply(colorMultiplier)
                 .multiply(BigDecimal.valueOf(quantity))
                 .multiply(densityMultiplier(papier))
-                .multiply(setting.getMarkup())
                 .setScale(2, RoundingMode.HALF_UP);
     }
 

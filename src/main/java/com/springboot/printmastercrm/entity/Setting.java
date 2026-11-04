@@ -60,7 +60,7 @@ public class Setting {
     @Column(nullable = false)
     private BigDecimal clicheMinPrice = BigDecimal.ZERO;
 
-    /** Коэффициент, на который умножается итог любого расчёта (1.25 = +25%). */
+    /** Коэффициент, на который умножается итог расчёта тиснения (1.25 = +25%). Печать и клише без него. */
     @Column(nullable = false)
     private BigDecimal markup = new BigDecimal("1.25");
 }
