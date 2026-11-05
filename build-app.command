@@ -40,8 +40,15 @@ rm -rf "dist/$APP.app"; mkdir -p dist
     --java-options "-Dprintmaster.open-browser=true -Dfile.encoding=UTF-8 -Xmx512m" \
     || { echo "jpackage не сработал"; pause; exit 1; }
 
+# Без значка в Dock: программа работает в фоне, значок не прыгает. Остановка — кнопка «Выход» в меню программы.
+PLIST="dist/$APP.app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Delete :LSUIElement" "$PLIST" >/dev/null 2>&1
+/usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" "$PLIST" \
+    && codesign --force --deep --sign - "dist/$APP.app" >/dev/null 2>&1
+
 echo
 echo "Готово: dist/$APP.app"
+echo "Значка в Dock у программы нет (чтобы не прыгал) — открывайте http://localhost:8765 (добавьте в закладки), закрывайте кнопкой «Выход»."
 echo "Перетащите его в «Программы» (Applications) и запускайте двойным щелчком. Закрывать — кнопкой «Выход» в программе."
 echo "Если macOS скажет, что приложение от неизвестного разработчика: правый клик → «Открыть» (один раз)."
 echo "Данные лежат в ~/PrintMasterCRM-data и не пропадают при обновлении приложения. Журнал: ~/PrintMasterCRM-data/printmaster.log"
