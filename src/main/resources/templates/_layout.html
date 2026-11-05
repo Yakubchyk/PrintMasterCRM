@@ -14,6 +14,9 @@
     <a th:href="@{/orders}" th:classappend="${active == 'orders'} ? 'active'">Заказы</a>
     <a th:href="@{/materials}" th:classappend="${active == 'materials'} ? 'active'">Материалы</a>
     <a th:href="@{/settings}" th:classappend="${active == 'settings'} ? 'active'">Настройки</a>
+    <form class="quit" method="post" th:action="@{/app/shutdown}" onsubmit="return confirm('Закрыть программу? Данные сохранены.')">
+        <button type="submit" title="Остановить программу">Выход</button>
+    </form>
 </nav>
 <div th:fragment="alerts">
     <div class="alert error" th:if="${error != null}" th:text="${error}">Ошибка</div>
