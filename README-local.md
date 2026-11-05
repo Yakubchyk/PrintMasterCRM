@@ -13,6 +13,10 @@
 
 **Вариант 2 — скрипт.** Двойной щелчок по `start.command`: соберёт программу (если были изменения), запустит и откроет браузер. Нужна Java 17+.
 
+**Windows.** `.app` работает только на Mac. На Windows нужна JDK 17+, затем: `start.bat` (сборка и запуск) или `build-app.bat`
+(собирает `dist\PrintMaster CRM\PrintMaster CRM.exe` со встроенной Java; собирать надо на самом Windows-компьютере).
+Данные там лежат в `%USERPROFILE%\PrintMasterCRM-data`. Перенести данные между компьютерами — скопировать эту папку.
+
 **Из IntelliJ** — как раньше, запуск `PrintMasterCrmApplication` (браузер сам не открывается).
 
 Журнал работы: `~/PrintMasterCRM-data/printmaster.log` — смотреть, если программа не открылась.
