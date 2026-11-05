@@ -144,6 +144,15 @@ public class OrdersController {
         return backToNew(id);
     }
 
+    /** Печатная карточка заказа: половина A4, которую можно сложить в конверт. */
+    @GetMapping("/{id}/print")
+    public String print(@PathVariable Long id, Model model) {
+        Order order = orderService.get(id);
+        model.addAttribute("order", order);
+        model.addAttribute("items", orderService.consumptionByOrder(List.of(order)).get(id));
+        return "order-print";
+    }
+
     // ---- действия над заказом ----
 
     @PostMapping("/{id}/status")

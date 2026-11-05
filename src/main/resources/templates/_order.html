@@ -15,6 +15,7 @@
                             th:selected="${o.status == s}">Статус</option>
                 </select>
             </form>
+            <a class="button secondary small" target="_blank" th:href="@{/orders/{id}/print(id=${o.id})}" title="Печать карточки заказа (половина A4, конверт для макета)">🖨 Карточка</a>
             <form class="inline" method="post" th:action="@{/orders/{id}/delete(id=${o.id})}"
                   onsubmit="return confirm('Удалить заказ? Резерв снимется, а уже списанные материалы вернутся на склад.')">
                 <button type="submit" class="danger small" title="Удалить заказ">✕</button>
