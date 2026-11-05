@@ -8,42 +8,77 @@
     <div th:replace="~{_layout :: alerts}"></div>
 
     <section>
-        <form th:action="@{/customers}" method="get" class="row">
-            <div>
-                <label for="q">Поиск по названию, телефону или email</label>
-                <input type="search" id="q" name="q" th:value="${q}">
-            </div>
-            <div class="fixed">
-                <button type="submit">Найти</button>
-                <a class="button secondary" th:href="@{/customers}" th:if="${!q.isEmpty()}">Сбросить</a>
-            </div>
-        </form>
+        <div class="toolbar">
+            <form th:action="@{/customers}" method="get" class="row search">
+                <div>
+                    <label for="q">Поиск по названию, телефону или email</label>
+                    <input type="search" id="q" name="q" th:value="${q}" placeholder="Начните вводить…">
+                </div>
+                <div class="fixed">
+                    <button type="submit" class="secondary">Найти</button>
+                    <a class="button secondary" th:href="@{/customers}" th:if="${!q.isEmpty()}">Сбросить</a>
+                </div>
+            </form>
+            <button type="button" id="openNewClient">+ Новый клиент</button>
+        </div>
 
-        <div class="muted" th:if="${#lists.isEmpty(customers)}" style="margin-top:12px">Клиентов нет</div>
-        <table th:unless="${#lists.isEmpty(customers)}">
+        <div class="muted" th:if="${#lists.isEmpty(customers)}" style="margin-top:16px">Клиентов нет</div>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(customers)}">
+        <table class="clients">
             <thead>
-            <tr><th>Название организации</th><th>Email</th><th>Телефон</th><th>Город</th></tr>
+            <tr><th>Организация</th><th>Email</th><th>Телефон</th><th>Город</th></tr>
             </thead>
             <tbody>
             <tr th:each="c : ${customers}">
-                <td><a th:href="@{/customers/{id}(id=${c.id})}" th:text="${c.name}">Название</a></td>
+                <td><a class="cust-name" th:href="@{/customers/{id}(id=${c.id})}"><span class="avatar" th:text="${c.name.substring(0,1).toUpperCase()}">A</span><span th:text="${c.name}">Название</span></a></td>
                 <td th:text="${c.email}">Email</td>
                 <td th:text="${c.phoneNumber}">Телефон</td>
                 <td th:text="${c.city}"></td>
             </tr>
             </tbody>
         </table>
+        </div>
     </section>
 
-    <section>
-        <details>
-            <summary>Новый клиент</summary>
-            <form th:action="@{/customers}" method="post">
+    <dialog id="newClient">
+        <form th:action="@{/customers}" method="post" id="newClientForm">
+            <div class="dlg-head"><h2>Новый клиент</h2></div>
+            <div class="dlg-body">
                 <div th:replace="~{_client :: fields(null)}"></div>
-                <p style="margin-bottom:0"><button type="submit">Добавить клиента</button></p>
-            </form>
-        </details>
-    </section>
+                <div class="dlg-actions">
+                    <button type="button" class="secondary" id="cancelNewClient">Отмена</button>
+                    <button type="submit">Добавить клиента</button>
+                </div>
+            </div>
+        </form>
+    </dialog>
 </main>
+<script th:inline="none">
+(function () {
+    var dlg = document.getElementById('newClient');
+    var form = document.getElementById('newClientForm');
+    var KEY = 'newClientDraft';
+    function save() {
+        try {
+            var d = {};
+            Array.prototype.forEach.call(form.elements, function (e) { if (e.name) d[e.name] = e.value; });
+            sessionStorage.setItem(KEY, JSON.stringify(d));
+        } catch (x) {}
+    }
+    function restore() {
+        try {
+            var d = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+            if (d) Array.prototype.forEach.call(form.elements, function (e) { if (e.name && d[e.name] != null) e.value = d[e.name]; });
+        } catch (x) {}
+    }
+    document.getElementById('openNewClient').addEventListener('click', function () { restore(); dlg.showModal(); });
+    document.getElementById('cancelNewClient').addEventListener('click', function () { dlg.close(); });
+    dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+    form.addEventListener('input', save);
+    form.addEventListener('submit', function () { try { sessionStorage.removeItem(KEY); } catch (x) {} });
+    // после ошибки сохранения — открыть окно снова с введёнными данными
+    if (document.querySelector('.alert.error')) { restore(); dlg.showModal(); }
+})();
+</script>
 </body>
 </html>
