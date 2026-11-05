@@ -24,4 +24,17 @@ spring:
 server:
   # Входа по паролю нет, поэтому программа доступна только с этого компьютера.
   address: 127.0.0.1
-  port: 8080
+  # Порт 8765, чтобы не мешать другим программам на 8080
+  port: 8765
+
+printmaster:
+  # Открывать браузер при запуске: включают start.command и приложение .app (в IntelliJ выключено)
+  open-browser: false
+
+logging:
+  file:
+    name: ${PRINTMASTER_DATA:${user.home}/PrintMasterCRM-data}/printmaster.log
+  logback:
+    rollingpolicy:
+      max-file-size: 5MB
+      max-history: 4
