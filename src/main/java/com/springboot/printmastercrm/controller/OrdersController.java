@@ -59,6 +59,17 @@ public class OrdersController {
         return "orders-customer";
     }
 
+    /** Карточка одного заказа целиком. */
+    @GetMapping("/{id}")
+    public String view(@PathVariable Long id, Model model) {
+        Order order = orderService.get(id);
+        model.addAttribute("order", order);
+        model.addAttribute("items", orderService.consumptionByOrder(List.of(order)).get(id));
+        model.addAttribute("statuses", OrderStatus.values());
+        model.addAttribute("back", "order");
+        return "order-view";
+    }
+
     // ---- оформление заказа ----
 
     @GetMapping("/new")
@@ -144,6 +155,15 @@ public class OrdersController {
         return backToNew(id);
     }
 
+    /** Печатная карточка заказа: половина A4, которую можно сложить в конверт. */
+    @GetMapping("/{id}/print")
+    public String print(@PathVariable Long id, Model model) {
+        Order order = orderService.get(id);
+        model.addAttribute("order", order);
+        model.addAttribute("items", orderService.consumptionByOrder(List.of(order)).get(id));
+        return "order-print";
+    }
+
     // ---- действия над заказом ----
 
     @PostMapping("/{id}/status")
@@ -160,6 +180,9 @@ public class OrdersController {
             // вернуться в список «все заказы» (с тем же поиском)
             return "redirect:/orders?view=all" + (q == null || q.isBlank() ? ""
                     : "&q=" + java.net.URLEncoder.encode(q.trim(), java.nio.charset.StandardCharsets.UTF_8));
+        }
+        if ("order".equals(back)) {
+            return "redirect:/orders/" + id;
         }
         return "redirect:/orders/customer/" + order.getCustomer().getId();
     }
