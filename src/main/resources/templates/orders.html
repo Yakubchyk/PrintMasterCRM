@@ -58,14 +58,16 @@
             <thead><tr><th>№</th><th>Дата</th><th>Описание</th><th class="num">Сумма</th><th>Статус</th><th>Клиент</th></tr></thead>
             <tbody>
             <tr th:each="o : ${orders}">
-                <td><a class="order-id" th:href="@{/orders/customer/{id}(id=${o.customer.id})} + '#order-' + ${o.id}" th:text="${o.id}"></a></td>
-                <td th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></td>
+                <td><a class="olink order-id" th:href="@{/orders/{id}(id=${o.id})}" th:text="'№ ' + ${o.id}"></a></td>
+                <td><a class="olink" th:href="@{/orders/{id}(id=${o.id})}" th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></a></td>
                 <td>
+                  <a class="olink" th:href="@{/orders/{id}(id=${o.id})}">
                     <span th:text="${o.product}"></span>
                     <div class="muted" th:if="${consumption.get(o.id) != null}" style="font-size:12.5px">
                         <span th:each="u, st : ${consumption.get(o.id)}"
                               th:text="${u.material.name} + ' — ' + ${u.quantity.stripTrailingZeros().toPlainString()} + ' ' + ${u.material.unit.label} + (${st.last} ? '' : '; ')"></span>
                     </div>
+                  </a>
                 </td>
                 <td class="num total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
                 <td>

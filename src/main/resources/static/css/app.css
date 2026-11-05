@@ -150,6 +150,12 @@ details[open] summary { margin-bottom: 14px; }
 .seg a:hover { background: rgba(255, 255, 255, .6); color: var(--bark-dark); }
 .seg a.active { background: #fff; color: var(--accent-dark); box-shadow: 0 1px 4px rgba(86, 80, 50, .18); }
 
+/* ссылки внутри строки заказа: выглядят как текст, откликаются при наведении */
+a.olink { display: inline-block; color: var(--text); padding: 3px 6px; margin: -3px -6px; }
+a.olink:hover { color: var(--accent-dark); background: var(--accent-soft); }
+a.order-id { font-weight: 700; color: var(--bark-dark); padding: 2px 6px; margin: -2px -6px; }
+a.olink .muted { color: var(--muted); }
+
 /* ---------- клиенты ---------- */
 .client-cell { white-space: nowrap; font-weight: 600; }
 .cust-name { display: inline-flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 700; color: var(--bark-dark); padding: 4px 10px 4px 4px; margin: -4px; border-radius: 12px; }

@@ -5,11 +5,12 @@
 <article th:fragment="card(o, items, statuses, showCustomer)" class="order" th:id="'order-' + ${o.id}">
     <header>
         <div>
-            <b style="font-size:17px">Заказ №<span th:text="${o.id}"></span></b>
+            <a class="order-id" style="font-size:17px" th:href="@{/orders/{id}(id=${o.id})}">Заказ №<span th:text="${o.id}"></span></a>
             <span th:if="${showCustomer}"> · <a th:href="@{/orders/customer/{id}(id=${o.customer.id})}" th:text="${o.customer.name}">Клиент</a></span>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
             <form class="inline" method="post" th:action="@{/orders/{id}/status(id=${o.id})}">
+                <input type="hidden" name="back" th:value="${back}">
                 <select name="status" class="status" th:classappend="'st-' + ${o.status.name()}" onchange="this.form.submit()">
                     <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
                             th:selected="${o.status == s}">Статус</option>

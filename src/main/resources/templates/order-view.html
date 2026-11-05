@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{_layout :: head('Заказ № ' + ${order.id})}"></head>
+<body>
+<nav th:replace="~{_layout :: nav('orders')}"></nav>
+<main class="p-orders">
+    <p>
+        <a th:href="@{/orders(view='all')}">← Все заказы</a>
+        &nbsp;·&nbsp;
+        <a th:href="@{/orders/customer/{id}(id=${order.customer.id})}" th:text="'Все заказы клиента: ' + ${order.customer.name}">Клиент</a>
+    </p>
+    <div th:replace="~{_layout :: alerts}"></div>
+    <div th:replace="~{_order :: card(${order}, ${items}, ${statuses}, true)}"></div>
+</main>
+</body>
+</html>
