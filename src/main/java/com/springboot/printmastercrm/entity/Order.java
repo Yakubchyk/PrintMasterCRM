@@ -54,4 +54,7 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    /** Когда заказ получил статус «Выполнен»; null, пока не выполнен. */
+    private LocalDateTime completedAt;
 }

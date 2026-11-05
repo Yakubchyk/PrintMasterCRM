@@ -79,6 +79,7 @@ public class OrdersController {
         List<Material> clicheMaterials = new java.util.ArrayList<>(materialService.findByCategory(MaterialCategory.MAGNESIUM));
         clicheMaterials.addAll(materialService.findByCategory(MaterialCategory.BRASS));
         model.addAttribute("clicheMaterials", clicheMaterials);
+        model.addAttribute("foilMaterials", materialService.findByCategory(MaterialCategory.FOIL));
         return "order-new";
     }
 
@@ -98,9 +99,11 @@ public class OrdersController {
 
     @PostMapping("/new/{id}/postpress")
     public String addPostPress(@PathVariable Long id, @RequestParam BigDecimal width,
-                               @RequestParam BigDecimal length, @RequestParam int quantity) {
+                               @RequestParam BigDecimal length, @RequestParam int quantity,
+                               @RequestParam(value = "materialId", required = false) Long materialId) {
         LengthUnit unit = settingService.getSettings().getLengthUnit();
-        postPressService.create(customerService.get(id), unit.toCm(width), unit.toCm(length), quantity);
+        Material foil = materialId == null ? null : materialService.get(materialId);
+        postPressService.create(customerService.get(id), unit.toCm(width), unit.toCm(length), quantity, foil);
         return backToNew(id);
     }
 

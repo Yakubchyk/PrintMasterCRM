@@ -34,9 +34,20 @@ public class PostPress {
     @Column(nullable = false)
     private BigDecimal lengthCm;
 
+    /** Фольга, которая расходуется на этот расчёт; по ней резервируется склад. Может быть не указана. */
+    @ManyToOne
+    @JoinColumn(name = "material_id")
+    @ToString.Exclude
+    private Material material;
+
     @Column(nullable = false)
     private BigDecimal totalPrice;
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    /** Площадь фольги на весь тираж: размер оттиска × тираж, см². */
+    public BigDecimal getFoilAreaCm2() {
+        return widthCm.multiply(lengthCm).multiply(BigDecimal.valueOf(quantity));
+    }
 }

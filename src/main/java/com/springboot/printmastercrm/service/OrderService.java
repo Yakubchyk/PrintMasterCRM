@@ -37,7 +37,7 @@ public class OrderService {
     public static class CustomerSummary {
         private final Customer customer;
         private final int orderCount;
-        /** Заказы, которые ещё не отгружены. */
+        /** Заказы, которые ещё не выполнены. */
         private final int activeCount;
         private final BigDecimal total;
         private final LocalDateTime lastOrderAt;
@@ -92,8 +92,14 @@ public class OrderService {
                     .orElseThrow(() -> new NotFoundException("Расчёт тиснения не найден"));
             requireSameCustomer(pp.getCustomer(), customer);
             postpress = postpress.add(pp.getTotalPrice());
-            lines.add("Тиснение: " + lu.format(pp.getWidthCm()) + " × " + lu.format(pp.getLengthCm()) + " "
-                    + lu.getLabel() + ", тираж " + pp.getQuantity() + " — " + money(pp.getTotalPrice()));
+            lines.add("Тиснение: оттиск " + lu.format(pp.getWidthCm()) + " × " + lu.format(pp.getLengthCm()) + " "
+                    + lu.getLabel() + ", тираж " + pp.getQuantity()
+                    + (pp.getMaterial() != null ? ", " + pp.getMaterial().getName() : "")
+                    + " — " + money(pp.getTotalPrice()));
+            if (pp.getMaterial() != null) {
+                toReserve.merge(pp.getMaterial().getId(),
+                        pp.getFoilAreaCm2().setScale(3, RoundingMode.HALF_UP), BigDecimal::add);
+            }
         }
         BigDecimal printing = BigDecimal.ZERO;
         for (Long id : prIds) {
@@ -128,28 +134,33 @@ public class OrderService {
         return order;
     }
 
-    /** Отгрузка списывает зарезервированные материалы со склада; возврат из «Отгружен» возвращает их в резерв. */
+    /** Статус «Выполнен» списывает зарезервированные материалы со склада; возврат из него снова ставит их в резерв. */
     @Transactional
     public void setStatus(Long orderId, OrderStatus status) {
         Order order = get(orderId);
         OrderStatus old = order.getStatus();
-        if (old != OrderStatus.SHIPPED && status == OrderStatus.SHIPPED) {
+        if (old != OrderStatus.DONE && status == OrderStatus.DONE) {
             for (OrderMaterial used : orderMaterialRepository.findByOrderId(orderId)) {
                 if (!used.isWrittenOff()) {
-                    materialService.ship(used.getMaterial().getId(), used.getQuantity(), "Отгрузка: заказ №" + orderId);
+                    materialService.ship(used.getMaterial().getId(), used.getQuantity(), "Заказ №" + orderId + " выполнен");
                     used.setWrittenOff(true);
                     orderMaterialRepository.save(used);
                 }
             }
-        } else if (old == OrderStatus.SHIPPED && status != OrderStatus.SHIPPED) {
+        } else if (old == OrderStatus.DONE && status != OrderStatus.DONE) {
             for (OrderMaterial used : orderMaterialRepository.findByOrderId(orderId)) {
                 if (used.isWrittenOff()) {
                     materialService.unship(used.getMaterial().getId(), used.getQuantity(),
-                            "Отмена отгрузки: заказ №" + orderId);
+                            "Отмена выполнения: заказ №" + orderId);
                     used.setWrittenOff(false);
                     orderMaterialRepository.save(used);
                 }
             }
+        }
+        if (status == OrderStatus.DONE && old != OrderStatus.DONE) {
+            order.setCompletedAt(LocalDateTime.now());
+        } else if (status != OrderStatus.DONE) {
+            order.setCompletedAt(null);
         }
         order.setStatus(status);
         orderRepository.save(order);
@@ -247,7 +258,7 @@ public class OrderService {
         for (Customer customer : customers) {
             List<Order> orders = byCustomer.getOrDefault(customer.getId(), List.of());
             BigDecimal total = orders.stream().map(Order::getTotalCost).reduce(BigDecimal.ZERO, BigDecimal::add);
-            int active = (int) orders.stream().filter(o -> o.getStatus() != OrderStatus.SHIPPED).count();
+            int active = (int) orders.stream().filter(o -> o.getStatus() != OrderStatus.DONE).count();
             LocalDateTime last = orders.isEmpty() ? null : orders.get(0).getCreatedAt();
             result.add(new CustomerSummary(customer, orders.size(), active, total, last));
         }
@@ -259,14 +270,11 @@ public class OrderService {
     private static String describe(Cliche cl, LengthUnit lu) {
         String unit = " " + lu.getLabel();
         StringBuilder sb = new StringBuilder("Клише: ")
-                .append(lu.format(cl.getWidthCm())).append(" × ").append(lu.format(cl.getLengthCm())).append(unit)
-                .append(" = ").append(area(cl.getWorkAreaCm2())).append(" см²");
+                .append(lu.format(cl.getWidthCm())).append(" × ").append(lu.format(cl.getLengthCm())).append(unit);
         if (cl.getMarginCm() != null && cl.getMarginCm().signum() > 0) {
-            sb.append(" + поля ").append(lu.format(cl.getMarginCm())).append(unit).append(" с каждой стороны");
+            sb.append(", поля ").append(lu.format(cl.getMarginCm())).append(unit);
         }
-        sb.append(", общий размер ").append(lu.format(cl.getTotalWidthCm())).append(" × ")
-                .append(lu.format(cl.getTotalLengthCm())).append(unit)
-                .append(" = ").append(area(cl.getAreaCm2())).append(" см²")
+        sb.append(", общая площадь с полями ").append(area(cl.getAreaCm2())).append(" см²")
                 .append(", ").append(cl.getQuantity()).append(" шт.");
         if (cl.getMaterial() != null) {
             sb.append(", ").append(cl.getMaterial().getName());
