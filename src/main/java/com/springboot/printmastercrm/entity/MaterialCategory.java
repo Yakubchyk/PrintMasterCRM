@@ -4,7 +4,8 @@ package com.springboot.printmastercrm.entity;
 public enum MaterialCategory {
     PAPER("Бумага и картон", StockUnit.SHEET),
     MAGNESIUM("Клише: магний", StockUnit.CM2),
-    BRASS("Клише: латунь", StockUnit.CM2);
+    BRASS("Клише: латунь", StockUnit.CM2),
+    FOIL("Фольга для тиснения", StockUnit.CM2);
 
     private final String label;
     private final StockUnit unit;

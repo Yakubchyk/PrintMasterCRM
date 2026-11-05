@@ -1,5 +1,6 @@
 package com.springboot.printmastercrm.service;
 
+import com.springboot.printmastercrm.entity.FoilType;
 import com.springboot.printmastercrm.entity.Material;
 import com.springboot.printmastercrm.entity.MaterialCategory;
 import com.springboot.printmastercrm.entity.MovementType;
@@ -10,6 +11,7 @@ import com.springboot.printmastercrm.exception.NotFoundException;
 import com.springboot.printmastercrm.repository.ClicheRepository;
 import com.springboot.printmastercrm.repository.MaterialRepository;
 import com.springboot.printmastercrm.repository.OrderMaterialRepository;
+import com.springboot.printmastercrm.repository.PostPressRepository;
 import com.springboot.printmastercrm.repository.StockMovementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class MaterialService {
     private final StockMovementRepository movementRepository;
     private final OrderMaterialRepository orderMaterialRepository;
     private final ClicheRepository clicheRepository;
+    private final PostPressRepository postPressRepository;
 
     public List<Material> findAll() {
         return materialRepository.findAllByOrderByNameAsc();
@@ -77,7 +80,7 @@ public class MaterialService {
     @Transactional
     public Material createPlate(String name, MaterialCategory category, BigDecimal widthCm, BigDecimal lengthCm,
                                 BigDecimal sheets, String note) {
-        if (category == null || category == MaterialCategory.PAPER) {
+        if (category != MaterialCategory.MAGNESIUM && category != MaterialCategory.BRASS) {
             throw new BusinessRuleException("Размер листа в см² задаётся только для магния и латуни");
         }
         requirePositiveSize(widthCm, lengthCm);
@@ -103,6 +106,44 @@ public class MaterialService {
         return material;
     }
 
+    /**
+     * Фольга: тип, ширина рулона (см), намотка (м) и число рулонов. Остаток считается в см²:
+     * ширина × (намотка в см) × рулоны. Название собирается из типа и размера рулона.
+     */
+    @Transactional
+    public Material createFoil(FoilType foilType, BigDecimal widthCm, BigDecimal windingM, BigDecimal rolls,
+                               String note) {
+        if (foilType == null) {
+            throw new BusinessRuleException("Выберите тип фольги");
+        }
+        if (widthCm == null || windingM == null || widthCm.signum() <= 0 || windingM.signum() <= 0) {
+            throw new BusinessRuleException("Ширина рулона и намотка должны быть больше нуля");
+        }
+        BigDecimal count = rolls == null ? BigDecimal.ZERO : rolls;
+        if (count.signum() < 0 || count.stripTrailingZeros().scale() > 0) {
+            throw new BusinessRuleException("Количество рулонов — целое число, не меньше нуля");
+        }
+        BigDecimal lengthCm = windingM.movePointRight(2);
+        String name = foilType.getLabel() + " " + widthCm.stripTrailingZeros().toPlainString() + " см × "
+                + windingM.stripTrailingZeros().toPlainString() + " м";
+        if (materialRepository.existsByName(name)) {
+            throw new ExistsException("Такая фольга («" + name + "») уже есть: примите на неё рулоны на странице материала");
+        }
+        Material material = new Material();
+        material.setName(name);
+        material.setCategory(MaterialCategory.FOIL);
+        material.setFoilType(foilType);
+        material.setSheetWidthCm(widthCm);
+        material.setSheetLengthCm(lengthCm);
+        material.setNote(clean(note));
+        material = materialRepository.save(material);
+        if (count.signum() > 0) {
+            receive(material.getId(), widthCm.multiply(lengthCm).multiply(count),
+                    "Начальный остаток: " + count.stripTrailingZeros().toPlainString() + " рул.");
+        }
+        return material;
+    }
+
     /** Приход целых листов магния/латуни: на склад добавляется площадь листов. */
     @Transactional
     public void receiveSheets(Long id, BigDecimal sheets, String note) {
@@ -114,7 +155,8 @@ public class MaterialService {
         if (sheets == null || sheets.signum() <= 0 || sheets.stripTrailingZeros().scale() > 0) {
             throw new BusinessRuleException("Количество листов — целое число больше нуля");
         }
-        String text = sheets.stripTrailingZeros().toPlainString() + " лист.";
+        String text = sheets.stripTrailingZeros().toPlainString()
+                + (material.getCategory() == MaterialCategory.FOIL ? " рул." : " лист.");
         receive(id, area.multiply(sheets), note == null || note.isBlank() ? text : text + ", " + note.trim());
     }
 
@@ -170,6 +212,7 @@ public class MaterialService {
                     + "» списывался на заказы, удалить его нельзя");
         }
         clicheRepository.detachMaterial(id);
+        postPressRepository.detachMaterial(id);
         movementRepository.deleteByMaterialId(id);
         materialRepository.delete(material);
     }
@@ -195,7 +238,7 @@ public class MaterialService {
         materialRepository.save(material);
     }
 
-    /** Отгрузка: резерв превращается в списание со склада. */
+    /** Выполнение заказа: резерв превращается в списание со склада. */
     @Transactional
     public void ship(Long id, BigDecimal quantity, String note) {
         Material material = get(id);
@@ -209,7 +252,7 @@ public class MaterialService {
         writeMovement(material, MovementType.OUT, amount, note);
     }
 
-    /** Отмена отгрузки: материал возвращается на склад и снова в резерве заказа. */
+    /** Отмена выполнения: материал возвращается на склад и снова в резерве заказа. */
     @Transactional
     public void unship(Long id, BigDecimal quantity, String note) {
         Material material = get(id);

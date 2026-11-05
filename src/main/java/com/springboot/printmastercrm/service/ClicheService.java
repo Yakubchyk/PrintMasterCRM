@@ -46,7 +46,8 @@ public class ClicheService {
         if (margin.signum() < 0) {
             throw new BusinessRuleException("Технологические поля не могут быть отрицательными");
         }
-        if (material != null && material.getCategory() == MaterialCategory.PAPER) {
+        if (material != null && material.getCategory() != MaterialCategory.MAGNESIUM
+                && material.getCategory() != MaterialCategory.BRASS) {
             throw new BusinessRuleException("Для клише выберите магний или латунь");
         }
         Cliche cliche = new Cliche();

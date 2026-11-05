@@ -35,7 +35,7 @@
         <div class="muted" th:if="${#lists.isEmpty(summaries)}">Клиентов нет. Сначала добавьте клиента в разделе «Клиенты».</div>
         <div class="table-wrap" th:unless="${#lists.isEmpty(summaries)}">
         <table>
-            <thead><tr><th>Клиент</th><th class="num">Заказов</th><th class="num">Не отгружено</th><th class="num">Сумма</th><th>Последний заказ</th></tr></thead>
+            <thead><tr><th>Клиент</th><th class="num">Заказов</th><th class="num">Не выполнено</th><th class="num">Сумма</th><th>Последний заказ</th></tr></thead>
             <tbody>
             <tr th:each="s : ${summaries}">
                 <td class="client-cell"><a th:href="@{/orders/customer/{id}(id=${s.customer.id})}" th:text="${s.customer.name}">Клиент</a></td>

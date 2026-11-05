@@ -2,6 +2,8 @@ package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.AreaUnit;
 import com.springboot.printmastercrm.entity.Customer;
+import com.springboot.printmastercrm.entity.Material;
+import com.springboot.printmastercrm.entity.MaterialCategory;
 import com.springboot.printmastercrm.entity.PostPress;
 import com.springboot.printmastercrm.entity.Setting;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
@@ -107,5 +109,22 @@ class PostPressServiceTest {
 
         service.delete(5L, 9L);
         verify(postPressRepository).delete(pp);
+    }
+
+    @Test
+    void createStoresFoilAndRejectsNonFoilMaterial() {
+        when(settingService.getSettings()).thenReturn(TestSettings.standard());
+        when(postPressRepository.save(any(PostPress.class))).thenAnswer(i -> i.getArgument(0));
+        Customer customer = Customer.builder().id(1L).build();
+        Material foil = new Material();
+        foil.setCategory(MaterialCategory.FOIL);
+        Material paper = new Material();
+
+        PostPress saved = service.create(customer, d("10"), d("10"), 10, foil);
+
+        assertThat(saved.getMaterial()).isSameAs(foil);
+        assertThat(saved.getFoilAreaCm2()).isEqualByComparingTo("1000");
+        assertThatThrownBy(() -> service.create(customer, d("10"), d("10"), 10, paper))
+                .isInstanceOf(BusinessRuleException.class);
     }
 }

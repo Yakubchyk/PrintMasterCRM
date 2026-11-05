@@ -213,7 +213,7 @@ class OrderServiceTest {
         Order order = service.createOrder(customer, "Клише", null, null, List.of(3L), null);
 
         verify(materialService).reserve(eq(9L), argThat(q -> q.compareTo(new BigDecimal("84")) == 0));
-        assertThat(order.getDetails()).contains("= 20 см²").contains("общий размер 6 × 7 см = 42 см²").contains("поля 1 см");
+        assertThat(order.getDetails()).contains("общая площадь с полями 42 см²").contains("поля 1 см").doesNotContain("6 × 7");
     }
 
     @Test
@@ -229,7 +229,7 @@ class OrderServiceTest {
         when(orderRepository.findById(4L)).thenReturn(Optional.of(order));
         when(orderMaterialRepository.findByOrderId(4L)).thenReturn(List.of(used));
 
-        service.setStatus(4L, OrderStatus.SHIPPED);
+        service.setStatus(4L, OrderStatus.DONE);
 
         verify(materialService).ship(eq(7L), eq(new BigDecimal("50")), any());
         assertThat(used.isWrittenOff()).isTrue();
@@ -282,7 +282,7 @@ class OrderServiceTest {
         Customer empty = Customer.builder().id(30L).name("Firma C").build();
         Order shipped = new Order();
         shipped.setCustomer(customer);
-        shipped.setStatus(OrderStatus.SHIPPED);
+        shipped.setStatus(OrderStatus.DONE);
         shipped.setTotalCost(new BigDecimal("100"));
         Order open = new Order();
         open.setCustomer(customer);
@@ -350,5 +350,49 @@ class OrderServiceTest {
         verify(materialService).release(7L, new BigDecimal("50"));
         verify(materialService, never()).receive(any(), any(), any());
         verify(orderRepository).delete(order);
+    }
+
+    @Test
+    void foilIsReservedByImprintAreaTimesTirage() {
+        Material foil = new Material();
+        foil.setId(11L);
+        foil.setName("Золото 62 см × 122 м");
+        PostPress pp = postPress(customer, "164.06");
+        pp.setWidthCm(new BigDecimal("5"));
+        pp.setLengthCm(new BigDecimal("3"));
+        pp.setQuantity(1000);
+        pp.setMaterial(foil);
+        when(postPressRepository.findById(1L)).thenReturn(Optional.of(pp));
+        when(materialService.get(11L)).thenReturn(foil);
+
+        Order order = service.createOrder(customer, "Тиснение", List.of(1L), null, null, null);
+
+        verify(materialService).reserve(eq(11L), argThat(q -> q.compareTo(new BigDecimal("15000")) == 0));
+        assertThat(order.getDetails()).contains("оттиск 5 × 3 см").contains("Золото");
+    }
+
+    @Test
+    void completingOrderStampsDateAndWritesOffMaterials() {
+        Order order = new Order();
+        order.setId(5L);
+        Material foil = new Material();
+        foil.setId(11L);
+        OrderMaterial used = new OrderMaterial();
+        used.setOrder(order);
+        used.setMaterial(foil);
+        used.setQuantity(new BigDecimal("15000"));
+        when(orderRepository.findById(5L)).thenReturn(Optional.of(order));
+        when(orderMaterialRepository.findByOrderId(5L)).thenReturn(List.of(used));
+
+        service.setStatus(5L, OrderStatus.IN_PROGRESS);
+        verify(materialService, never()).ship(any(), any(), any());
+        assertThat(order.getCompletedAt()).isNull();
+
+        service.setStatus(5L, OrderStatus.DONE);
+        verify(materialService).ship(eq(11L), eq(new BigDecimal("15000")), any());
+        assertThat(order.getCompletedAt()).isNotNull();
+
+        service.setStatus(5L, OrderStatus.READY);
+        assertThat(order.getCompletedAt()).isNull();
     }
 }

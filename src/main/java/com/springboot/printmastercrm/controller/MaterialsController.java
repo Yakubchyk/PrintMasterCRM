@@ -1,5 +1,6 @@
 package com.springboot.printmastercrm.controller;
 
+import com.springboot.printmastercrm.entity.FoilType;
 import com.springboot.printmastercrm.entity.LengthUnit;
 import com.springboot.printmastercrm.entity.MaterialCategory;
 import com.springboot.printmastercrm.service.SettingService;
@@ -30,12 +31,17 @@ public class MaterialsController {
         }
         model.addAttribute("materialsByCategory", byCategory);
         model.addAttribute("categories", MaterialCategory.values());
+        model.addAttribute("foilTypes", FoilType.values());
         model.addAttribute("lu", settingService.getSettings().getLengthUnit());
         return "materials";
     }
 
     @PostMapping
-    public String create(@RequestParam String name, @RequestParam MaterialCategory category,
+    public String create(@RequestParam(value = "name", required = false) String name,
+                         @RequestParam MaterialCategory category,
+                         @RequestParam(value = "foilType", required = false) FoilType foilType,
+                         @RequestParam(value = "winding", required = false) BigDecimal winding,
+                         @RequestParam(value = "rolls", required = false) BigDecimal rolls,
                          @RequestParam(value = "sheetSize", required = false) String sheetSize,
                          @RequestParam(value = "stock", required = false) BigDecimal stock,
                          @RequestParam(value = "width", required = false) BigDecimal width,
@@ -44,6 +50,9 @@ public class MaterialsController {
                          @RequestParam(value = "note", required = false) String note) {
         if (category == MaterialCategory.PAPER) {
             materialService.create(name, category, sheetSize, stock, note);
+        } else if (category == MaterialCategory.FOIL) {
+            LengthUnit unit = settingService.getSettings().getLengthUnit();
+            materialService.createFoil(foilType, width == null ? null : unit.toCm(width), winding, rolls, note);
         } else {
             LengthUnit unit = settingService.getSettings().getLengthUnit();
             materialService.createPlate(name, category, width == null ? null : unit.toCm(width),
@@ -65,10 +74,14 @@ public class MaterialsController {
                          @RequestParam(value = "sheetSize", required = false) String sheetSize,
                          @RequestParam(value = "width", required = false) BigDecimal width,
                          @RequestParam(value = "length", required = false) BigDecimal length,
+                         @RequestParam(value = "winding", required = false) BigDecimal winding,
                          @RequestParam(value = "note", required = false) String note) {
         materialService.update(id, name, sheetSize, note);
-        if (width != null && length != null) {
-            LengthUnit unit = settingService.getSettings().getLengthUnit();
+        LengthUnit unit = settingService.getSettings().getLengthUnit();
+        if (width != null && winding != null) {
+            // фольга: намотка в метрах
+            materialService.updatePlateSize(id, unit.toCm(width), winding.movePointRight(2));
+        } else if (width != null && length != null) {
             materialService.updatePlateSize(id, unit.toCm(width), unit.toCm(length));
         }
         return "redirect:/materials/" + id;

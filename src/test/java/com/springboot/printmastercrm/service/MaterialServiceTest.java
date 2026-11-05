@@ -1,5 +1,6 @@
 package com.springboot.printmastercrm.service;
 
+import com.springboot.printmastercrm.entity.FoilType;
 import com.springboot.printmastercrm.entity.Material;
 import com.springboot.printmastercrm.entity.MaterialCategory;
 import com.springboot.printmastercrm.entity.MovementType;
@@ -9,6 +10,7 @@ import com.springboot.printmastercrm.exception.ExistsException;
 import com.springboot.printmastercrm.repository.ClicheRepository;
 import com.springboot.printmastercrm.repository.MaterialRepository;
 import com.springboot.printmastercrm.repository.OrderMaterialRepository;
+import com.springboot.printmastercrm.repository.PostPressRepository;
 import com.springboot.printmastercrm.repository.StockMovementRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,8 @@ class MaterialServiceTest {
     private OrderMaterialRepository orderMaterialRepository;
     @Mock
     private ClicheRepository clicheRepository;
+    @Mock
+    private PostPressRepository postPressRepository;
     @InjectMocks
     private MaterialService service;
 
@@ -190,6 +194,7 @@ class MaterialServiceTest {
         service.delete(1L);
 
         verify(clicheRepository).detachMaterial(1L);
+        verify(postPressRepository).detachMaterial(1L);
         verify(movementRepository).deleteByMaterialId(1L);
         verify(materialRepository).delete(foil);
     }
@@ -313,5 +318,50 @@ class MaterialServiceTest {
                 .isInstanceOf(BusinessRuleException.class);
         assertThatThrownBy(() -> service.receiveSheets(1L, BigDecimal.ONE, null))   // у бумаги нет площади листа
                 .isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
+    void foilRollIsConvertedToSquareCentimetres() {
+        savedPlate();
+
+        // рулон 62 см × 122 м = 62 × 12 200 = 756 400 см²; 2 рулона
+        Material foil = service.createFoil(FoilType.GOLD, new BigDecimal("62"), new BigDecimal("122"),
+                new BigDecimal("2"), null);
+
+        assertThat(foil.getCategory()).isEqualTo(MaterialCategory.FOIL);
+        assertThat(foil.getSheetAreaCm2()).isEqualByComparingTo("756400");
+        assertThat(foil.getStock()).isEqualByComparingTo("1512800");
+        assertThat(foil.getRollLengthM()).isEqualByComparingTo("122");
+        assertThat(foil.getName()).isEqualTo("Золото 62 см × 122 м");
+        assertThat(foil.getUnit().getLabel()).isEqualTo("см²");
+    }
+
+    @Test
+    void foilRequiresTypeSizeAndWholeRolls() {
+        assertThatThrownBy(() -> service.createFoil(null, new BigDecimal("62"), new BigDecimal("122"), BigDecimal.ONE, null))
+                .isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.createFoil(FoilType.SILVER, BigDecimal.ZERO, new BigDecimal("122"), BigDecimal.ONE, null))
+                .isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.createFoil(FoilType.SILVER, new BigDecimal("62"), new BigDecimal("122"), new BigDecimal("1.5"), null))
+                .isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
+    void sameFoilIsNotDuplicated() {
+        when(materialRepository.existsByName("Серебро 62 см × 305 м")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.createFoil(FoilType.SILVER, new BigDecimal("62"), new BigDecimal("305"), BigDecimal.ONE, null))
+                .isInstanceOf(ExistsException.class);
+    }
+
+    @Test
+    void receiveRollsAddsRollAreas() {
+        savedPlate();
+        Material foil = service.createFoil(FoilType.MATTE_GOLD, new BigDecimal("30"), new BigDecimal("100"),
+                BigDecimal.ZERO, null);
+
+        service.receiveSheets(3L, new BigDecimal("2"), null);
+
+        assertThat(foil.getStock()).isEqualByComparingTo("600000");   // 30 × 10 000 × 2
     }
 }

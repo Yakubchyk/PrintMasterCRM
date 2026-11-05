@@ -11,13 +11,15 @@
         <h2 th:text="${entry.key.label}">Раздел</h2>
         <div class="muted" th:if="${#lists.isEmpty(entry.value)}">Материалов нет</div>
         <table th:unless="${#lists.isEmpty(entry.value)}">
-            <thead><tr><th>Материал</th><th>Размер листа</th><th class="num">На складе</th><th class="num">В резерве</th><th class="num">Свободно</th><th>Примечание</th><th></th></tr></thead>
+            <thead><tr><th>Материал</th><th th:text="${entry.key.name() == 'FOIL'} ? 'Рулон' : 'Размер листа'">Размер листа</th><th class="num">На складе</th><th class="num">В резерве</th><th class="num">Свободно</th><th>Примечание</th><th></th></tr></thead>
             <tbody>
             <tr th:each="m : ${entry.value}">
                 <td><a th:href="@{/materials/{id}(id=${m.id})}" th:text="${m.name}">Материал</a></td>
                 <td th:if="${entry.key.name() == 'PAPER'}" th:text="${m.sheetSize}"></td>
-                <td th:unless="${entry.key.name() == 'PAPER'}"
+                <td th:if="${entry.key.name() == 'MAGNESIUM' or entry.key.name() == 'BRASS'}"
                     th:text="${m.sheetAreaCm2 != null} ? ${lu.format(m.sheetWidthCm)} + ' × ' + ${lu.format(m.sheetLengthCm)} + ' ' + ${lu.label} + ' (' + ${m.sheetAreaCm2.stripTrailingZeros().toPlainString()} + ' см²)' : '—'"></td>
+                <td th:if="${entry.key.name() == 'FOIL'}"
+                    th:text="${m.sheetAreaCm2 != null} ? 'рулон ' + ${lu.format(m.sheetWidthCm)} + ' ' + ${lu.label} + ' × ' + ${m.rollLengthM.stripTrailingZeros().toPlainString()} + ' м' : '—'"></td>
                 <td class="num" th:text="${m.stock.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label}"></td>
                 <td class="num muted" th:text="${m.reserved.signum() > 0} ? ${m.reserved.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label} : '—'"></td>
                 <td class="num total" th:text="${m.available.stripTrailingZeros().toPlainString()} + ' ' + ${m.unit.label}"></td>
@@ -38,33 +40,47 @@
             <summary>Новый материал</summary>
             <form th:action="@{/materials}" method="post" class="row">
                 <div><label>Раздел</label>
-                    <select name="category" id="category" onchange="toggleSheet()">
+                    <select name="category" id="category" onchange="toggleGroups()">
                         <option th:each="c : ${categories}" th:value="${c.name()}" th:text="${c.label} + ' (' + ${c.unit.label} + ')'"></option>
                     </select></div>
-                <div><label>Название</label><input type="text" name="name" required></div>
-                <div id="sheetBox"><label>Размер листа</label><input type="text" name="sheetSize" maxlength="50" placeholder="например 70x100 см"></div>
-                <div id="stockBox"><label>Начальный остаток, листов</label><input type="number" name="stock" step="1" min="0" value="0"></div>
-                <div class="plate"><label th:text="'Ширина листа, ' + ${lu.label}">Ширина</label><input type="number" name="width" step="any" min="0"></div>
-                <div class="plate"><label th:text="'Длина листа, ' + ${lu.label}">Длина</label><input type="number" name="length" step="any" min="0"></div>
-                <div class="plate"><label>Начальный остаток, листов</label><input type="number" name="sheets" step="1" min="0" value="0"></div>
+                <div data-for="PAPER MAGNESIUM BRASS"><label>Название</label><input type="text" name="name" required></div>
+
+                <div data-for="FOIL"><label>Тип фольги</label>
+                    <select name="foilType" required>
+                        <option th:each="t : ${foilTypes}" th:value="${t.name()}" th:text="${t.label}"></option>
+                    </select></div>
+                <div data-for="FOIL"><label th:text="'Ширина рулона, ' + ${lu.label}">Ширина</label>
+                    <input type="number" name="width" step="any" min="0" required placeholder="62"></div>
+                <div data-for="FOIL"><label>Намотка, м</label>
+                    <input type="number" name="winding" step="any" min="0" required placeholder="122"></div>
+                <div data-for="FOIL"><label>Рулонов</label><input type="number" name="rolls" step="1" min="0" value="1"></div>
+
+                <div data-for="PAPER"><label>Размер листа</label><input type="text" name="sheetSize" maxlength="50" placeholder="например 70x100 см"></div>
+                <div data-for="PAPER"><label>Начальный остаток, листов</label><input type="number" name="stock" step="1" min="0" value="0"></div>
+
+                <div data-for="MAGNESIUM BRASS"><label th:text="'Ширина листа, ' + ${lu.label}">Ширина</label><input type="number" name="width" step="any" min="0" required></div>
+                <div data-for="MAGNESIUM BRASS"><label th:text="'Длина листа, ' + ${lu.label}">Длина</label><input type="number" name="length" step="any" min="0" required></div>
+                <div data-for="MAGNESIUM BRASS"><label>Начальный остаток, листов</label><input type="number" name="sheets" step="1" min="0" value="0"></div>
+
                 <div><label>Примечание</label><input type="text" name="note" maxlength="255"></div>
                 <div class="fixed"><button type="submit">Добавить</button></div>
             </form>
+            <p class="hint" id="foilHint" hidden>Остаток фольги считается в см²: ширина рулона × намотка × число рулонов. Например, 62 см × 122 м даёт 62 × 12 200 = 756 400 см² на рулон.</p>
         </details>
     </section>
 </main>
 <script>
-    function toggleSheet() {
-        var paper = document.getElementById('category').value === 'PAPER';
-        document.getElementById('sheetBox').style.display = paper ? '' : 'none';
-        document.getElementById('stockBox').style.display = paper ? '' : 'none';
-        document.querySelectorAll('.plate').forEach(function (e) {
-            e.style.display = paper ? 'none' : '';
-            e.querySelectorAll('input').forEach(function (i) { i.disabled = paper; i.required = !paper && i.name !== 'sheets'; });
+    // показываем только поля выбранного раздела; скрытые отключаем, чтобы они не отправлялись и не проверялись
+    function toggleGroups() {
+        var c = document.getElementById('category').value;
+        document.querySelectorAll('[data-for]').forEach(function (g) {
+            var on = g.getAttribute('data-for').split(' ').indexOf(c) >= 0;
+            g.style.display = on ? '' : 'none';
+            g.querySelectorAll('input,select').forEach(function (i) { i.disabled = !on; });
         });
-        document.querySelectorAll('#stockBox input').forEach(function (i) { i.disabled = !paper; });
+        document.getElementById('foilHint').hidden = c !== 'FOIL';
     }
-    toggleSheet();
+    toggleGroups();
 </script>
 </body>
 </html>

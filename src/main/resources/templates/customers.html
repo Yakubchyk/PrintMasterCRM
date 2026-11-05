@@ -22,13 +22,13 @@
         <div class="muted" th:if="${#lists.isEmpty(customers)}" style="margin-top:12px">Клиентов нет</div>
         <table th:unless="${#lists.isEmpty(customers)}">
             <thead>
-            <tr><th>Название организации</th><th>Телефон</th><th>Email</th><th>Город</th></tr>
+            <tr><th>Название организации</th><th>Email</th><th>Телефон</th><th>Город</th></tr>
             </thead>
             <tbody>
             <tr th:each="c : ${customers}">
                 <td><a th:href="@{/customers/{id}(id=${c.id})}" th:text="${c.name}">Название</a></td>
-                <td th:text="${c.phoneNumber}">Телефон</td>
                 <td th:text="${c.email}">Email</td>
+                <td th:text="${c.phoneNumber}">Телефон</td>
                 <td th:text="${c.city}"></td>
             </tr>
             </tbody>
@@ -38,15 +38,9 @@
     <section>
         <details>
             <summary>Новый клиент</summary>
-            <form th:action="@{/customers}" method="post" class="row">
-                <div><label for="name">Название организации</label><input type="text" id="name" name="name" required></div>
-                <div><label for="phone">Телефон</label><input type="text" id="phone" name="phone" required></div>
-                <div><label for="email">Email</label><input type="email" id="email" name="email" required></div>
-                <div><label for="postalCode">Индекс</label><input type="text" id="postalCode" name="postalCode" maxlength="20"></div>
-                <div><label for="city">Город</label><input type="text" id="city" name="city" maxlength="100"></div>
-                <div><label for="street">Улица</label><input type="text" id="street" name="street" maxlength="150"></div>
-                <div><label for="houseNumber">Номер дома</label><input type="text" id="houseNumber" name="houseNumber" maxlength="20"></div>
-                <div class="fixed"><button type="submit">Добавить</button></div>
+            <form th:action="@{/customers}" method="post">
+                <div th:replace="~{_client :: fields(null)}"></div>
+                <p style="margin-bottom:0"><button type="submit">Добавить клиента</button></p>
             </form>
         </details>
     </section>

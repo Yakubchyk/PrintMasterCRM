@@ -9,21 +9,14 @@
     <div th:replace="~{_layout :: alerts}"></div>
 
     <section>
-        <div>Телефон: <b th:text="${customer.phoneNumber}"></b> · Email: <b th:text="${customer.email}"></b></div>
-        <div th:if="${!customer.addressLine.isEmpty()}">Адрес: <b th:text="${customer.addressLine}"></b></div>
-        <details style="margin-top:10px">
+        <div th:replace="~{_client :: contact(${customer})}"></div>
+        <details style="margin-top:14px">
             <summary>Изменить данные клиента</summary>
-            <form th:action="@{/customers/{id}/update(id=${customer.id})}" method="post" class="row">
-                <div><label>Название организации</label><input type="text" name="name" th:value="${customer.name}" required></div>
-                <div><label>Телефон</label><input type="text" name="phone" th:value="${customer.phoneNumber}" required></div>
-                <div><label>Email</label><input type="email" name="email" th:value="${customer.email}" required></div>
-                <div><label>Индекс</label><input type="text" name="postalCode" th:value="${customer.postalCode}" maxlength="20"></div>
-                <div><label>Город</label><input type="text" name="city" th:value="${customer.city}" maxlength="100"></div>
-                <div><label>Улица</label><input type="text" name="street" th:value="${customer.street}" maxlength="150"></div>
-                <div><label>Номер дома</label><input type="text" name="houseNumber" th:value="${customer.houseNumber}" maxlength="20"></div>
-                <div class="fixed"><button type="submit">Сохранить</button></div>
+            <form th:action="@{/customers/{id}/update(id=${customer.id})}" method="post">
+                <div th:replace="~{_client :: fields(${customer})}"></div>
+                <p><button type="submit">Сохранить</button></p>
             </form>
-            <form th:action="@{/customers/{id}/delete(id=${customer.id})}" method="post" style="margin-top:12px"
+            <form th:action="@{/customers/{id}/delete(id=${customer.id})}" method="post"
                   onsubmit="return confirm('Удалить клиента вместе со всеми его расчётами и заказами?')">
                 <button type="submit" class="danger">Удалить клиента</button>
             </form>

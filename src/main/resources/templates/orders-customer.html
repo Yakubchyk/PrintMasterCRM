@@ -9,10 +9,7 @@
     <div th:replace="~{_layout :: alerts}"></div>
 
     <section>
-        <div>
-            <span th:text="${customer.phoneNumber}"></span> · <span th:text="${customer.email}"></span>
-            <span th:if="${!customer.addressLine.isEmpty()}" th:text="' · ' + ${customer.addressLine}"></span>
-        </div>
+        <div th:replace="~{_client :: contact(${customer})}"></div>
         <p style="margin-bottom:0">
             <a class="button" th:href="@{/orders/new(customerId=${customer.id})}">+ Новый заказ</a>
             <a class="button secondary" th:href="@{/customers/{id}(id=${customer.id})}">Карточка клиента</a>
@@ -26,5 +23,9 @@
         </th:block>
     </section>
 </main>
+<script th:inline="javascript">
+    // заказ оформлен (или просмотр заказов) — черновик описания больше не нужен
+    try { sessionStorage.removeItem('draft-' + /*[[${customer.id}]]*/ '0'); } catch (e) {}
+</script>
 </body>
 </html>

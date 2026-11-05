@@ -53,14 +53,16 @@
             </form>
             <p class="muted" style="margin:4px 0">Цена считается по общему размеру (размер + поля). Материал резервируется на складе при оформлении заказа: общая площадь × количество.</p>
             <table th:unless="${#lists.isEmpty(clicheList)}">
-                <thead><tr><th></th><th>Дата</th><th>Размер</th><th>Общий размер с полями</th><th>Материал</th><th class="num">Кол-во</th><th class="num">Стоимость</th><th></th></tr></thead>
+                <thead><tr><th></th><th>Дата</th><th>Размер</th><th>Общий размер, площадь с полями</th><th>Материал</th><th class="num">Кол-во</th><th class="num">Стоимость</th><th></th></tr></thead>
                 <tbody>
                 <tr th:each="p : ${clicheList}">
                     <td><input type="checkbox" name="clicheIds" th:value="${p.id}" form="orderForm"></td>
                     <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
-                    <td th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label} + ' = ' + ${p.workAreaCm2.stripTrailingZeros().toPlainString()} + ' см²'"></td>
-                    <td><b th:text="${lu.format(p.totalWidthCm)} + ' × ' + ${lu.format(p.totalLengthCm)} + ' ' + ${lu.label} + ' = ' + ${p.areaCm2.stripTrailingZeros().toPlainString()} + ' см²'"></b>
-                        <span class="muted" th:if="${p.marginCm.signum() > 0}" th:text="'(поля ' + ${lu.format(p.marginCm)} + ' ' + ${lu.label} + ' с каждой стороны)'"></span></td>
+                    <td>
+                        <span th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label}"></span>
+                        <span class="muted" th:if="${p.marginCm.signum() > 0}" th:text="'+ поля ' + ${lu.format(p.marginCm)}"></span>
+                    </td>
+                    <td><b th:text="${p.areaCm2.stripTrailingZeros().toPlainString()} + ' см²'"></b></td>
                     <td th:text="${p.material != null} ? ${p.material.name} : '—'"></td>
                     <td class="num" th:text="${p.quantity}"></td>
                     <td class="num total" th:text="${#numbers.formatDecimal(p.totalPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
@@ -80,15 +82,23 @@
                 <div><label th:text="'Ширина, ' + ${lu.label}">Ширина</label><input type="number" name="width" step="any" min="0" required></div>
                 <div><label th:text="'Длина, ' + ${lu.label}">Длина</label><input type="number" name="length" step="any" min="0" required></div>
                 <div><label>Тираж</label><input type="number" name="quantity" min="1" step="1" required></div>
+                <div><label>Фольга</label>
+                    <select name="materialId">
+                        <option value="">— не списывать —</option>
+                        <option th:each="m : ${foilMaterials}" th:value="${m.id}"
+                                th:text="${m.name} + ' (свободно ' + ${m.available.stripTrailingZeros().toPlainString()} + ' см²)'"></option>
+                    </select></div>
                 <div class="fixed"><button type="submit">Рассчитать</button></div>
             </form>
+            <p class="muted" style="margin:4px 0">Фольга резервируется при оформлении заказа: размер оттиска × тираж. Списывается, когда заказ станет «Выполнен».</p>
             <table th:unless="${#lists.isEmpty(postPressList)}">
-                <thead><tr><th></th><th>Дата</th><th>Размер</th><th class="num">Тираж</th><th class="num">Стоимость</th><th></th></tr></thead>
+                <thead><tr><th></th><th>Дата</th><th>Оттиск</th><th>Фольга</th><th class="num">Тираж</th><th class="num">Стоимость</th><th></th></tr></thead>
                 <tbody>
                 <tr th:each="p : ${postPressList}">
                     <td><input type="checkbox" name="postPressIds" th:value="${p.id}" form="orderForm"></td>
                     <td th:text="${#temporals.format(p.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
                     <td th:text="${lu.format(p.widthCm)} + ' × ' + ${lu.format(p.lengthCm)} + ' ' + ${lu.label}"></td>
+                    <td th:text="${p.material != null} ? ${p.material.name} + ' — ' + ${p.foilAreaCm2.stripTrailingZeros().toPlainString()} + ' см²' : '—'"></td>
                     <td class="num" th:text="${p.quantity}"></td>
                     <td class="num total" th:text="${#numbers.formatDecimal(p.totalPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></td>
                     <td class="num">
@@ -133,11 +143,12 @@
 
         <section id="orderSection" hidden>
             <h2>Оформить заказ</h2>
+            <div class="alert error" id="noCalc" hidden>Отметьте галочкой хотя бы один расчёт выше — описание сохранено, ничего не потеряно.</div>
             <p class="muted" style="margin-top:0">Отметьте галочками расчёты выше, которые входят в заказ.</p>
             <form id="orderForm" th:action="@{/orders}" method="post">
                 <input type="hidden" name="customerId" th:value="${customer.id}">
                 <label for="product">Детали заказа</label>
-                <textarea id="product" name="product" required maxlength="255"></textarea>
+                <textarea id="product" name="product" required maxlength="255" placeholder="Что именно заказывает клиент"></textarea>
 
                 <details style="margin-top:12px" th:unless="${#lists.isEmpty(paperMaterials)}">
                     <summary>Бумага и картон: сколько листов зарезервировать</summary>
@@ -148,7 +159,7 @@
                         </div>
                     </div>
                 </details>
-                <p class="muted">Материалы резервируются при оформлении заказа и списываются со склада, когда заказ получает статус «Отгружен».</p>
+                <p class="muted">Материалы резервируются при оформлении заказа и списываются со склада, когда заказ получает статус «Выполнен».</p>
                 <p><button type="submit">Оформить заказ</button></p>
             </form>
         </section>
@@ -183,6 +194,24 @@
             hint.hidden = list.length > 0;
             try { sessionStorage.setItem(key, JSON.stringify(list)); } catch (e) {}
         }
+        // описание заказа не теряется ни при ошибке, ни при добавлении расчёта (страница перезагружается)
+        var draftKey = 'draft-' + /*[[${customer.id}]]*/ '0';
+        var product = document.getElementById('product');
+        try { product.value = sessionStorage.getItem(draftKey) || product.value; } catch (e) {}
+        product.addEventListener('input', function () {
+            try { sessionStorage.setItem(draftKey, product.value); } catch (e) {}
+        });
+        document.getElementById('orderForm').addEventListener('submit', function (ev) {
+            var checked = document.querySelectorAll('input[form="orderForm"]:checked:not(:disabled)');
+            var warn = document.getElementById('noCalc');
+            if (checked.length === 0) {
+                ev.preventDefault();
+                warn.hidden = false;
+                warn.scrollIntoView({behavior: 'smooth', block: 'center'});
+            } else {
+                warn.hidden = true;
+            }
+        });
         try {
             var saved = JSON.parse(sessionStorage.getItem(key) || '[]');
             boxes.forEach(function (b) { b.checked = saved.indexOf(b.value) >= 0; });

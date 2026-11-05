@@ -41,11 +41,21 @@ public class Material {
 
     private BigDecimal sheetLengthCm;
 
-    /** Зарезервировано под оформленные, но ещё не отгруженные заказы. */
+    /** Тип фольги (только для раздела «Фольга»). */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    private FoilType foilType;
+
+    /** Зарезервировано под оформленные, но ещё не выполненные заказы. */
     @Column(nullable = false)
     private BigDecimal reserved = BigDecimal.ZERO;
 
     private String note;
+
+    /** Намотка рулона фольги, м (хранится как длина в см). */
+    public BigDecimal getRollLengthM() {
+        return sheetLengthCm == null ? null : sheetLengthCm.movePointLeft(2);
+    }
 
     /** Площадь одного исходного листа, см²; null, если размер не задан. */
     public BigDecimal getSheetAreaCm2() {

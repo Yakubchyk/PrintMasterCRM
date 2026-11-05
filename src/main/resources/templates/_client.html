@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Поля клиента: сначала название, email и телефон, ниже отдельным блоком адрес. c может быть null (новый клиент). -->
+<div th:fragment="fields(c)" class="client-form">
+    <div>
+        <label>Название организации</label>
+        <input class="big" type="text" name="name" th:value="${c?.name}" required maxlength="255" autocomplete="off">
+    </div>
+    <div class="cf-contact">
+        <div><label>Email</label><input type="email" name="email" th:value="${c?.email}" required></div>
+        <div><label>Телефон</label><input type="text" name="phone" th:value="${c?.phoneNumber}" required></div>
+    </div>
+    <fieldset class="cf-address">
+        <legend>Адрес</legend>
+        <div class="cf-row1">
+            <div><label>Индекс</label><input type="text" name="postalCode" th:value="${c?.postalCode}" maxlength="20"></div>
+            <div><label>Город</label><input type="text" name="city" th:value="${c?.city}" maxlength="100"></div>
+        </div>
+        <div class="cf-row2">
+            <div><label>Улица</label><input type="text" name="street" th:value="${c?.street}" maxlength="150"></div>
+            <div><label>Дом</label><input type="text" name="houseNumber" th:value="${c?.houseNumber}" maxlength="20"></div>
+        </div>
+    </fieldset>
+</div>
+
+<!-- Показ клиента: основное — email и телефон, адрес отдельным блоком -->
+<div th:fragment="contact(c)" class="contact">
+    <div class="contact-main">
+        <span><span class="muted">Email</span> <b th:text="${c.email}"></b></span>
+        <span><span class="muted">Телефон</span> <b th:text="${c.phoneNumber}"></b></span>
+    </div>
+    <div class="contact-addr" th:if="${!c.addressLine.isEmpty()}">
+        <span class="muted">Адрес</span> <b th:text="${c.addressLine}"></b>
+    </div>
+</div>
+</body>
+</html>

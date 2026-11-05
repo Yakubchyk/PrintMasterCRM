@@ -1,6 +1,8 @@
 package com.springboot.printmastercrm.service;
 
 import com.springboot.printmastercrm.entity.Customer;
+import com.springboot.printmastercrm.entity.Material;
+import com.springboot.printmastercrm.entity.MaterialCategory;
 import com.springboot.printmastercrm.entity.PostPress;
 import com.springboot.printmastercrm.entity.Setting;
 import com.springboot.printmastercrm.exception.BusinessRuleException;
@@ -32,12 +34,23 @@ public class PostPressService {
 
     @Transactional
     public PostPress create(Customer customer, BigDecimal widthCm, BigDecimal lengthCm, int quantity) {
+        return create(customer, widthCm, lengthCm, quantity, null);
+    }
+
+    /** foil — рулон фольги со склада (раздел «Фольга»); по размеру оттиска и тиражу он резервируется в заказе. */
+    @Transactional
+    public PostPress create(Customer customer, BigDecimal widthCm, BigDecimal lengthCm, int quantity,
+                            Material foil) {
         requirePositive(widthCm, lengthCm, quantity);
+        if (foil != null && foil.getCategory() != MaterialCategory.FOIL) {
+            throw new BusinessRuleException("Для тиснения выберите материал из раздела «Фольга»");
+        }
         PostPress postPress = new PostPress();
         postPress.setCustomer(customer);
         postPress.setWidthCm(widthCm);
         postPress.setLengthCm(lengthCm);
         postPress.setQuantity(quantity);
+        postPress.setMaterial(foil);
         postPress.setTotalPrice(calculateTotal(widthCm, lengthCm, quantity, settingService.getSettings()));
         return postPressRepository.save(postPress);
     }

@@ -4,7 +4,7 @@ public enum OrderStatus {
     NEW("Новый"),
     IN_PROGRESS("В работе"),
     READY("Готов"),
-    SHIPPED("Отгружен");
+    DONE("Выполнен");
 
     private final String label;
 

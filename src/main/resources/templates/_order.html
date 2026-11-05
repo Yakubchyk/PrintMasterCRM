@@ -5,8 +5,7 @@
 <article th:fragment="card(o, items, statuses, showCustomer)" class="order" th:id="'order-' + ${o.id}">
     <header>
         <div>
-            <b>Заказ №<span th:text="${o.id}"></span></b>
-            <span class="muted" th:text="' от ' + ${#temporals.format(o.createdAt, 'dd.MM.yyyy')}"></span>
+            <b style="font-size:17px">Заказ №<span th:text="${o.id}"></span></b>
             <span th:if="${showCustomer}"> · <a th:href="@{/orders/customer/{id}(id=${o.customer.id})}" th:text="${o.customer.name}">Клиент</a></span>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
@@ -22,18 +21,44 @@
             </form>
         </div>
     </header>
-    <div><b th:text="${o.product}"></b></div>
-    <div class="lines" th:if="${o.details != null}" th:text="${o.details}"></div>
+
+    <div class="meta">
+        <span><span class="muted">Создан</span> <b th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy HH:mm')}"></b></span>
+        <span th:if="${o.completedAt != null}"><span class="muted">Выполнен</span> <b th:text="${#temporals.format(o.completedAt, 'dd.MM.yyyy HH:mm')}"></b></span>
+        <span><span class="muted">Телефон</span> <b th:text="${o.customer.phoneNumber}"></b></span>
+        <span><span class="muted">Email</span> <b th:text="${o.customer.email}"></b></span>
+    </div>
+
+    <div class="block">
+        <div class="block-title">Описание</div>
+        <div th:text="${o.product}"></div>
+    </div>
+
+    <div class="block" th:if="${o.details != null and !o.details.isEmpty()}">
+        <div class="block-title">Состав работ</div>
+        <div class="lines" th:text="${o.details}"></div>
+    </div>
+
+    <div class="block" th:if="${items != null}">
+        <div class="block-title">Материалы</div>
+        <table class="mini">
+            <thead><tr><th>Материал</th><th class="num">Количество</th><th>Склад</th></tr></thead>
+            <tbody>
+            <tr th:each="u : ${items}">
+                <td th:text="${u.material.name}"></td>
+                <td class="num" th:text="${u.quantity.stripTrailingZeros().toPlainString()} + ' ' + ${u.material.unit.label}"></td>
+                <td><span class="badge" th:classappend="${u.writtenOff} ? 'st-DONE' : 'st-IN_PROGRESS'"
+                          th:text="${u.writtenOff} ? 'списано' : 'в резерве'"></span></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
     <div class="costs">
         <span th:if="${o.clichePrice.signum() > 0}">Клише: <b th:text="${#numbers.formatDecimal(o.clichePrice, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
         <span th:if="${o.postpressPrice.signum() > 0}">Тиснение: <b th:text="${#numbers.formatDecimal(o.postpressPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
         <span th:if="${o.printingPrice.signum() > 0}">Печать: <b th:text="${#numbers.formatDecimal(o.printingPrice, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
-        <span>Итого: <b class="total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
-    </div>
-    <div class="muted" th:if="${items != null}" style="margin-top:6px">
-        Материалы:
-        <span th:each="u, st : ${items}"
-              th:text="${u.material.name} + ' — ' + ${u.quantity.stripTrailingZeros().toPlainString()} + ' ' + ${u.material.unit.label} + ' (' + (${u.writtenOff} ? 'списано' : 'в резерве') + ')' + (${st.last} ? '' : '; ')"></span>
+        <span class="grand">Итого: <b class="total" th:text="${#numbers.formatDecimal(o.totalCost, 0, 'WHITESPACE', 2, 'COMMA')}"></b></span>
     </div>
 </article>
 </body>
